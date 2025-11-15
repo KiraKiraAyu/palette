@@ -3,27 +3,32 @@ use serde::{Deserialize, Serialize};
 
 use crate::set_timestamp_before_save;
 
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
+#[sea_orm(
+    rs_type = "String",
+    db_type = "Text",
+    enum_name = "user_type"
+)]
+pub enum ProviderType {
+    #[sea_orm(string_value = "OpenAI")]
+    OpenAI,
+}
+
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
-#[sea_orm(table_name = "users")]
+#[sea_orm(table_name = "user_providers")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
-    #[sea_orm(unique)]
-    pub email: String,
-    #[sea_orm(unique)]
+    pub user_id: Uuid,
     pub name: String,
-    #[serde(skip_serializing)]
-    pub password_hash: String,
-    pub avatar: Option<String>,
-    pub preferences: Option<Json>,
+    pub provider_type: ProviderType,
+    pub url: String,
+    pub key: Option<String>,
     pub created_at: DateTimeWithTimeZone,
     pub updated_at: DateTimeWithTimeZone,
-    #[serde(skip_serializing)]
-    pub deleted_at: Option<DateTimeWithTimeZone>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {}
-
 
 set_timestamp_before_save!(ActiveModel);
