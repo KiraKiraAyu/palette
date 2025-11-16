@@ -90,7 +90,7 @@ impl ProviderModelService {
         if let Some(v) = new_model_id_opt.clone() { active.model_id = Set(v); }
         if let Some(v) = name { active.name = Set(v); }
 
-        // 如果模型ID发生变化，刷新价格
+        // Refresh price if model ID changed
         if let Some(ref new_model_id) = new_model_id_opt {
             let provider = self.provider_repo.get_by_id_for_user(user_id, active.provider_id.clone().unwrap()).await?
                 .ok_or_else(|| AppError::NotFound("Provider not found".to_string()))?;
