@@ -3,7 +3,7 @@ use sea_orm_migration::prelude::*;
 use crate::m20251116_000001_create_users_table::Users;
 
 #[derive(DeriveIden)]
-enum UserProviders {
+pub enum UserProviders {
     Table,
     Id,
     UserId,

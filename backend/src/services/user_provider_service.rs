@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 use crate::{
     error::{AppError, Result},
-    models::user_provider::{self, ProviderType},
+    models::{user_provider::{self, ProviderType}, provider_model},
     repositories::provider_repo::ProviderRepo,
     utils::ToUuidV7,
 };
@@ -92,6 +92,17 @@ impl UserProviderService {
             Err(AppError::NotFound("Provider not found".to_string()))
         } else {
             Ok(())
+        }
+    }
+
+    pub async fn list_with_models(&self, user_id: Uuid) -> Result<Vec<(user_provider::Model, Vec<provider_model::Model>)>> {
+        self.repo.list_with_models_by_user_id(user_id).await
+    }
+
+    pub async fn get_with_models(&self, user_id: Uuid, id: Uuid) -> Result<(user_provider::Model, Vec<provider_model::Model>)> {
+        match self.repo.get_with_models_for_user(user_id, id).await? {
+            Some(pair) => Ok(pair),
+            None => Err(AppError::NotFound("Provider not found".to_string())),
         }
     }
 }

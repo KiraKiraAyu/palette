@@ -4,7 +4,7 @@ use axum::{
 };
 
 use crate::{
-    http::handlers::{auth_handler, user_provider_handler},
+    http::handlers::{auth_handler, user_provider_handler, provider_model_handler},
     state::AppState,
 };
 
@@ -20,4 +20,9 @@ pub fn create_routes() -> Router<AppState> {
         .route("/api/providers/:id", get(user_provider_handler::get_provider))
         .route("/api/providers/:id", put(user_provider_handler::update_provider))
         .route("/api/providers/:id", delete(user_provider_handler::delete_provider))
+
+        // Provider Models
+        .route("/api/providers/:provider_id/models", post(provider_model_handler::create_model))
+        .route("/api/providers/:provider_id/models/:id", put(provider_model_handler::update_model))
+        .route("/api/providers/:provider_id/models/:id", delete(provider_model_handler::delete_model))
 }

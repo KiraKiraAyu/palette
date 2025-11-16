@@ -1,7 +1,7 @@
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, DeleteResult};
 use uuid::Uuid;
 
-use crate::{error::{AppError, Result}, models::user_provider};
+use crate::{error::{AppError, Result}, models::{user_provider, provider_model}};
 
 pub struct ProviderRepo {
     pub pool: DatabaseConnection,
@@ -51,5 +51,25 @@ impl ProviderRepo {
             .exec(&self.pool)
             .await
             .map_err(AppError::from)
+    }
+
+    pub async fn list_with_models_by_user_id(&self, user_id: Uuid) -> Result<Vec<(user_provider::Model, Vec<provider_model::Model>)>> {
+        user_provider::Entity::find()
+            .filter(user_provider::Column::UserId.eq(user_id))
+            .find_with_related(provider_model::Entity)
+            .all(&self.pool)
+            .await
+            .map_err(AppError::from)
+    }
+
+    pub async fn get_with_models_for_user(&self, user_id: Uuid, id: Uuid) -> Result<Option<(user_provider::Model, Vec<provider_model::Model>)>> {
+        let mut items = user_provider::Entity::find()
+            .filter(user_provider::Column::UserId.eq(user_id))
+            .filter(user_provider::Column::Id.eq(id))
+            .find_with_related(provider_model::Entity)
+            .all(&self.pool)
+            .await
+            .map_err(AppError::from)?;
+        Ok(items.pop())
     }
 }

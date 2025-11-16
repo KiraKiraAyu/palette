@@ -36,10 +36,16 @@ pub enum Relation {
         to = "crate::models::user::Column::Id"
     )]
     User,
+    #[sea_orm(has_many = "crate::models::provider_model::Entity")]
+    ProviderModels,
 }
 
 impl Related<crate::models::user::Entity> for Entity {
     fn to() -> RelationDef { Relation::User.def() }
+}
+
+impl Related<crate::models::provider_model::Entity> for Entity {
+    fn to() -> RelationDef { Relation::ProviderModels.def() }
 }
 
 set_timestamp_before_save!(ActiveModel);

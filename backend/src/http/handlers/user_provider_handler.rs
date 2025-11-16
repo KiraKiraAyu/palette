@@ -12,7 +12,7 @@ use crate::{
     http::{
         dto::{
             common_schema::ApiResponse,
-            provider_schema::{CreateProviderRequest, UpdateProviderRequest, ProviderListResponse, ProviderIdResponse},
+            provider_schema::{CreateProviderRequest, UpdateProviderRequest, ProviderWithModelsListResponse, ProviderWithModels, ProviderIdResponse},
         },
         extractors::jwt::AuthUser,
     },
@@ -23,9 +23,10 @@ use crate::{
 pub async fn list_providers(
     AuthUser(claims): AuthUser,
     State(state): State<Arc<UserProviderService>>,
-) -> Result<Json<ApiResponse<ProviderListResponse>>> {
-    let items = state.list(claims.sub).await?;
-    Ok(Json(ApiResponse::success(Some(ProviderListResponse { items }), None::<String>)))
+) -> Result<Json<ApiResponse<ProviderWithModelsListResponse>>> {
+    let pairs = state.list_with_models(claims.sub).await?;
+    let items = pairs.into_iter().map(|(provider, models)| ProviderWithModels { provider, models }).collect();
+    Ok(Json(ApiResponse::success(Some(ProviderWithModelsListResponse { items }), None::<String>)))
 }
 
 pub async fn create_provider(
@@ -44,9 +45,9 @@ pub async fn get_provider(
     AuthUser(claims): AuthUser,
     State(state): State<Arc<UserProviderService>>,
     Path(id): Path<Uuid>,
-) -> Result<Json<ApiResponse<user_provider::Model>>> {
-    let model = state.get(claims.sub, id).await?;
-    Ok(Json(ApiResponse::success(Some(model), None::<String>)))
+) -> Result<Json<ApiResponse<ProviderWithModels>>> {
+    let (provider, models) = state.get_with_models(claims.sub, id).await?;
+    Ok(Json(ApiResponse::success(Some(ProviderWithModels { provider, models }), None::<String>)))
 }
 
 pub async fn update_provider(
