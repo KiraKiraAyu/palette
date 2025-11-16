@@ -9,8 +9,8 @@ members = [".", "migration"]
 
 [dependencies]
 # Web framework
-axum = { version = "0.8.4", features = ["macros", "ws", "multipart"] }
-axum-extra = { version = "0.12.1", features = ["cookie", "typed-header"] }
+axum = { version = "0.8.7", features = ["macros", "ws", "multipart"] }
+axum-extra = { version = "0.12.2", features = ["cookie", "typed-header"] }
 async-trait = "0.1.88"
 tokio = { version = "1.47.0", features = ["full"] }
 tower = "0.5.2"
