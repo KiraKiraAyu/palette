@@ -1,7 +1,8 @@
+use std::sync::Arc;
 use axum::{Router, http::{HeaderValue, Method, header::{ACCEPT, AUTHORIZATION}}};
+use state::create_state;
 use tower_http::cors::CorsLayer;
-use crate::{config::Config};
-use crate::routes::create_routes;
+use crate::{config::Config, routes::create_routes};
 
 mod config;
 mod database;
@@ -11,10 +12,13 @@ mod http;
 mod routes;
 mod services;
 mod repositories;
+mod utils;
+mod state;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config = Config::from_env()?;
+    let config = Arc::new(Config::from_env()?);
+    let app_state = create_state(&config).await?;
 
     let cors = CorsLayer::new()
         .allow_origin("http://localhost:5173".parse::<HeaderValue>()?)
@@ -24,7 +28,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app = Router::new()
         .merge(create_routes())
-        .layer(cors);
+        .layer(cors)
+        .with_state(app_state);
 
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", config.server.host, config.server.port))
         .await?;

@@ -1,3 +1,4 @@
-mod dto;
-mod handlers;
-mod middleware;
+pub mod dto;
+pub mod extractors;
+pub mod handlers;
+pub mod middleware;
