@@ -41,7 +41,7 @@ impl AuthService {
             ..Default::default()
         };
 
-        let created_user = self.repo.create_user(user).await?;
+        let created_user = self.repo.insert(user).await?;
         let token = self.generate_token(id)?;
         
         Ok(AuthResponse { token, user_info: created_user })

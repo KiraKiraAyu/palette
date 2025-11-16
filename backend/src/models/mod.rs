@@ -1,5 +1,5 @@
 pub mod user;
-pub mod user_providers;
+pub mod user_provider;
 
 
 #[macro_export]

@@ -37,9 +37,11 @@ impl UserRepo {
             .map_err(AppError::from)
     }
 
-    pub async fn create_user(&self, user: user::ActiveModel) -> Result<user::Model> {
-        user.insert(&self.pool)
-            .await
-            .map_err(AppError::from)
+    pub async fn insert(&self, model: user::ActiveModel) -> Result<user::Model> {
+        model.insert(&self.pool).await.map_err(AppError::from)
+    }
+
+    pub async fn update(&self, model: user::ActiveModel) -> Result<user::Model> {
+        model.update(&self.pool).await.map_err(AppError::from)
     }
 }

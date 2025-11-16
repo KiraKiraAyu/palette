@@ -23,7 +23,14 @@ pub struct Model {
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(has_many = "crate::models::user_provider::Entity")]
+    UserProviders,
+}
+
+impl Related<crate::models::user_provider::Entity> for Entity {
+    fn to() -> RelationDef { Relation::UserProviders.def() }
+}
 
 
 set_timestamp_before_save!(ActiveModel);

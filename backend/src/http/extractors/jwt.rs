@@ -8,7 +8,7 @@ use thiserror::Error;
 
 use crate::{http::dto::{auth_schema::Claims, common_schema::ApiResponse}, state::AppState};
 
-pub struct AuthUser(Claims);
+pub struct AuthUser(pub Claims);
 
 #[derive(Error, Debug)]
 pub enum AuthError {
