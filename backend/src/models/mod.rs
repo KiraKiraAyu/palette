@@ -1,5 +1,6 @@
 pub mod user;
 pub mod user_provider;
+pub mod provider_model;
 
 
 #[macro_export]

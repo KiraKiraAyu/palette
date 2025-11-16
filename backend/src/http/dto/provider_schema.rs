@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
 
-use crate::models::user_provider::{self, ProviderType};
+use crate::models::{user_provider::{self, ProviderType}, provider_model};
 
 #[derive(Debug, Clone, Validate, Deserialize)]
 pub struct CreateProviderRequest {
@@ -26,8 +26,14 @@ pub struct UpdateProviderRequest {
 }
 
 #[derive(Debug, Serialize)]
-pub struct ProviderListResponse {
-    pub items: Vec<user_provider::Model>,
+pub struct ProviderWithModels {
+    pub provider: user_provider::Model,
+    pub models: Vec<provider_model::Model>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ProviderWithModelsListResponse {
+    pub items: Vec<ProviderWithModels>,
 }
 
 #[derive(Debug, Serialize)]
