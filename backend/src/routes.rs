@@ -8,4 +8,5 @@ use crate::{http::handlers::auth_handler, state::AppState};
 pub fn create_routes() -> Router<AppState> {
     Router::new()
         .route("/api/auth/register", post(auth_handler::register))
+        .route("/api/auth/login", post(auth_handler::login))
 }
