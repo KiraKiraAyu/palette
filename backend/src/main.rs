@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use axum::{Router, http::{HeaderValue, Method, header::{ACCEPT, AUTHORIZATION}}};
+use axum::{Router, http::{HeaderValue, Method, header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE}}};
 use state::create_state;
 use tower_http::cors::CorsLayer;
 use crate::{config::Config, routes::create_routes};
@@ -24,8 +24,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cors = CorsLayer::new()
         .allow_origin("http://localhost:5173".parse::<HeaderValue>()?)
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
-        .allow_headers([AUTHORIZATION, ACCEPT])
-        .allow_credentials(true);
+        .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE]);
 
     let app = Router::new()
         .merge(create_routes())

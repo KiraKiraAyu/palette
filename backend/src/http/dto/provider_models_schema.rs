@@ -20,10 +20,10 @@ pub struct UpdateProviderModelRequest {
     pub name: Option<String>,
 }
 
-#[derive(Debug, Serialize)]
-pub struct ProviderModelListResponse {
-    pub items: Vec<provider_model::Model>,
-}
+// #[derive(Debug, Serialize)]
+// pub struct ProviderModelListResponse {
+//     pub items: Vec<provider_model::Model>,
+// }
 
 #[derive(Debug, Serialize)]
 pub struct ProviderModelIdResponse {

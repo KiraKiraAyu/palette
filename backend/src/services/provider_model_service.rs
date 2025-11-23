@@ -10,19 +10,19 @@ use crate::{
     models::{provider_model, user_provider},
     repositories::{provider_model_repo::ProviderModelRepo, provider_repo::ProviderRepo},
     utils::ToUuidV7,
-    clients::pricing_client::PricingClient,
+    clients::model_info_client::ModelInfoClient,
 };
 
 #[derive(Clone)]
 pub struct ProviderModelService {
     pub model_repo: Arc<ProviderModelRepo>,
     pub provider_repo: Arc<ProviderRepo>,
-    pub pricing_client: Arc<dyn PricingClient>,
+    pub model_info_client: Arc<dyn ModelInfoClient>,
 }
 
 impl ProviderModelService {
-    pub fn new(model_repo: Arc<ProviderModelRepo>, provider_repo: Arc<ProviderRepo>, pricing_client: Arc<dyn PricingClient>) -> Self {
-        Self { model_repo, provider_repo, pricing_client }
+    pub fn new(model_repo: Arc<ProviderModelRepo>, provider_repo: Arc<ProviderRepo>, model_info_client: Arc<dyn ModelInfoClient>) -> Self {
+        Self { model_repo, provider_repo, model_info_client }
     }
 
     pub async fn list(&self, user_id: Uuid, provider_id: Uuid) -> Result<Vec<provider_model::Model>> {
@@ -50,10 +50,9 @@ impl ProviderModelService {
             return Err(AppError::Conflict("Model ID already exists in provider".to_string()));
         }
 
-        // 获取价格
         let provider = self.provider_repo.get_by_id_for_user(user_id, provider_id).await?
             .ok_or_else(|| AppError::NotFound("Provider not found".to_string()))?;
-        let (input_price_per_million, output_price_per_million) = self.pricing_client.fetch_prices(&provider, &model_id).await?;
+        let (input_price_per_million, output_price_per_million) = self.model_info_client.fetch_prices(&provider, &model_id).await?;
 
         let id = Utc::now().to_uuid_v7();
         let active = provider_model::ActiveModel {
@@ -94,7 +93,7 @@ impl ProviderModelService {
         if let Some(ref new_model_id) = new_model_id_opt {
             let provider = self.provider_repo.get_by_id_for_user(user_id, active.provider_id.clone().unwrap()).await?
                 .ok_or_else(|| AppError::NotFound("Provider not found".to_string()))?;
-            let (in_price, out_price) = self.pricing_client.fetch_prices(&provider, new_model_id).await?;
+            let (in_price, out_price) = self.model_info_client.fetch_prices(&provider, new_model_id).await?;
             active.input_price_per_million = Set(in_price);
             active.output_price_per_million = Set(out_price);
         }

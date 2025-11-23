@@ -19,7 +19,7 @@ pub enum AuthError {
 impl IntoResponse for AuthError {
     fn into_response(self) -> Response {
         let (status, error_message) = match self {
-            AuthError::InvalidToken => (StatusCode::UNAUTHORIZED, "Token 无效"),
+            AuthError::InvalidToken => (StatusCode::UNAUTHORIZED, "Invalid token"),
         };
 
         let body = Json(ApiResponse::failed(Some(error_message)));

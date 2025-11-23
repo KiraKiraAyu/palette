@@ -1,6 +1,8 @@
 pub mod user;
 pub mod user_provider;
 pub mod provider_model;
+pub mod conversation_session;
+pub mod conversation_message;
 
 
 #[macro_export]

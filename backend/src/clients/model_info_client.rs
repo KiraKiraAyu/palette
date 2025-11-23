@@ -9,16 +9,16 @@ use crate::{
 };
 
 #[async_trait]
-pub trait PricingClient: Send + Sync {
+pub trait ModelInfoClient: Send + Sync {
     async fn fetch_prices(&self, provider: &ProviderModel, model_id: &str) -> Result<(Decimal, Decimal)>;
 }
 
 #[derive(Clone)]
-pub struct DefaultPricingClient {
+pub struct DefaultModelInfoClient {
     http: reqwest::Client,
 }
 
-impl Default for DefaultPricingClient {
+impl Default for DefaultModelInfoClient {
     fn default() -> Self {
         let http = reqwest::Client::builder()
             .timeout(Duration::from_secs(5))
@@ -35,7 +35,7 @@ struct PricingResponse {
 }
 
 #[async_trait]
-impl PricingClient for DefaultPricingClient {
+impl ModelInfoClient for DefaultModelInfoClient {
     async fn fetch_prices(&self, provider: &ProviderModel, model_id: &str) -> Result<(Decimal, Decimal)> {
         let base = provider.url.trim_end_matches('/');
         let candidates = vec![
@@ -55,12 +55,12 @@ impl PricingClient for DefaultPricingClient {
                     let parsed: PricingResponse = r
                         .json()
                         .await
-                        .map_err(|e| AppError::Internal(format!("解析价格响应失败: {}", e)))?;
+                        .map_err(|e| AppError::Internal(format!("Failed to parse pricing response: {}", e)))?;
                     return Ok((parsed.input_price_per_million, parsed.output_price_per_million));
                 }
             }
         }
 
-        Err(AppError::BadRequest("无法从服务商获取模型价格".to_string()))
+        Err(AppError::BadRequest("Cannot fetch model prices from provider".to_string()))
     }
 }
