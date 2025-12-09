@@ -40,18 +40,18 @@ service.interceptors.response.use(
 )
 
 const request = {
-    get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> {
-        return service.get(url, config) as Promise<T>;
+    get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+        return service.get<T, T>(url, config)
     },
-    post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-        return service.post(url, data, config) as Promise<T>;
+    post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+        return service.post(url, data, config)
     },
-    put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-        return service.put(url, data, config) as Promise<T>;
+    put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+        return service.put<T, T>(url, data, config)
     },
-    delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> {
-        return service.delete(url, config) as Promise<T>;
+    delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+        return service.delete<T, T>(url, config)
     }
 }
 
-export default request;
+export default request
