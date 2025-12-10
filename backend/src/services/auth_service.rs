@@ -2,8 +2,7 @@ use std::sync::Arc;
 use bcrypt::{DEFAULT_COST, hash, verify};
 use chrono::Utc;
 use jsonwebtoken::{Header, encode};
-use sea_orm::ActiveValue::Set;
-use crate::{config::JwtConfig, error::{AppError, Result}, http::dto::auth_schema::{AuthResponse, Claims}, models::user, repositories::user_repo::UserRepo, utils::ToUuidV7};
+use crate::{config::JwtConfig, error::{AppError, Result}, http::dto::auth_schema::{AuthResponse, Claims}, repositories::user_repo::UserRepo};
 
 #[derive(Clone)]
 pub struct AuthService {
@@ -31,18 +30,8 @@ impl AuthService {
             .await
             .map_err(|e| AppError::Internal(e.to_string()))??;
 
-        let id = Utc::now().to_uuid_v7();
-        let user = user::ActiveModel {
-            id: Set(id),
-            email: Set(email),
-            name: Set(name),
-            password_hash: Set(password_hash),
-            avatar: Set(None),
-            ..Default::default()
-        };
-
-        let created_user = self.repo.insert(user).await?;
-        let token = self.generate_token(id)?;
+        let created_user = self.repo.create(email, name, password_hash).await?;
+        let token = self.generate_token(created_user.id)?;
         
         Ok(AuthResponse { token, user_info: created_user })
     }

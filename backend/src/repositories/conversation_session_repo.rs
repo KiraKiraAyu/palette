@@ -1,8 +1,9 @@
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, DeleteResult};
 use sea_orm::ActiveValue::Set;
 use uuid::Uuid;
+use chrono::Utc;
 
-use crate::{error::{AppError, Result}, models::conversation_session};
+use crate::{error::{AppError, Result}, models::conversation_session, utils::ToUuidV7};
 
 pub struct ConversationSessionRepo {
     pub pool: DatabaseConnection,
@@ -11,8 +12,14 @@ pub struct ConversationSessionRepo {
 impl ConversationSessionRepo {
     pub fn new(pool: DatabaseConnection) -> Self { Self { pool } }
 
-    pub async fn insert(&self, model: conversation_session::ActiveModel) -> Result<conversation_session::Model> {
-        model.insert(&self.pool).await.map_err(AppError::from)
+    pub async fn create(&self, user_id: Uuid) -> Result<conversation_session::Model> {
+        let id = Utc::now().to_uuid_v7();
+        let active = conversation_session::ActiveModel {
+            id: Set(id),
+            user_id: Set(user_id),
+            ..Default::default()
+        };
+        active.insert(&self.pool).await.map_err(AppError::from)
     }
 
     pub async fn get_by_id(&self, id: Uuid) -> Result<Option<conversation_session::Model>> {

@@ -1,8 +1,4 @@
 use std::sync::Arc;
-
-use chrono::Utc;
-use sea_orm::{ActiveModelTrait, TransactionTrait};
-use sea_orm::ActiveValue::Set;
 use uuid::Uuid;
 
 use crate::{
@@ -14,7 +10,6 @@ use crate::{
         provider_model_repo::ProviderModelRepo,
         provider_repo::ProviderRepo,
     },
-    utils::ToUuidV7,
     clients::llm_client::{ChatMessagePayload, LlmClient},
 };
 
@@ -43,13 +38,7 @@ impl ConversationService {
     }
 
     pub async fn create_session(&self, user_id: Uuid) -> Result<conversation_session::Model> {
-        let id = Utc::now().to_uuid_v7();
-        let active = conversation_session::ActiveModel {
-            id: Set(id),
-            user_id: Set(user_id),
-            ..Default::default()
-        };
-        self.session_repo.insert(active).await
+        self.session_repo.create(user_id).await
     }
 
     pub async fn list_messages(&self, user_id: Uuid, session_id: Uuid) -> Result<Vec<conversation_message::Model>> {
@@ -80,27 +69,7 @@ impl ConversationService {
         let assistant_text = self.llm_client.chat(&provider, &model.model_id, messages_payload).await?;
 
         // Persist user & assistant message atomically
-        let txn = self.message_repo.pool.begin().await?;
-        let user_msg_id = Utc::now().to_uuid_v7();
-        let user_msg = conversation_message::ActiveModel {
-            id: Set(user_msg_id),
-            session_id: Set(session.id),
-            role: Set(ChatRole::User),
-            content: Set(content.clone()),
-            ..Default::default()
-        };
-        let _ = user_msg.insert(&txn).await?;
-
-        let asst_id = Utc::now().to_uuid_v7();
-        let asst_msg = conversation_message::ActiveModel {
-            id: Set(asst_id),
-            session_id: Set(session.id),
-            role: Set(ChatRole::Assistant),
-            content: Set(assistant_text.clone()),
-            ..Default::default()
-        };
-        let saved = asst_msg.insert(&txn).await?;
-        txn.commit().await?;
+        let saved = self.message_repo.create_pair(session.id, content.clone(), assistant_text).await?;
 
         // If this is the first message and session has no title, generate a title
         if session.title.is_none() {

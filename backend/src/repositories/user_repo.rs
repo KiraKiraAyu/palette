@@ -1,8 +1,11 @@
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
+use sea_orm::ActiveValue::Set;
 use uuid::Uuid;
+use chrono::Utc;
 
 use crate::error::{AppError, Result};
 use crate::models::user;
+use crate::utils::ToUuidV7;
 
 pub struct UserRepo {
     pub pool: DatabaseConnection
@@ -37,11 +40,16 @@ impl UserRepo {
             .map_err(AppError::from)
     }
 
-    pub async fn insert(&self, model: user::ActiveModel) -> Result<user::Model> {
-        model.insert(&self.pool).await.map_err(AppError::from)
-    }
-
-    pub async fn update(&self, model: user::ActiveModel) -> Result<user::Model> {
-        model.update(&self.pool).await.map_err(AppError::from)
+    pub async fn create(&self, email: String, name: String, password_hash: String) -> Result<user::Model> {
+        let id = Utc::now().to_uuid_v7();
+        let active_model = user::ActiveModel {
+            id: Set(id),
+            email: Set(email),
+            name: Set(name),
+            password_hash: Set(password_hash),
+            avatar: Set(None),
+            ..Default::default()
+        };
+        active_model.insert(&self.pool).await.map_err(AppError::from)
     }
 }

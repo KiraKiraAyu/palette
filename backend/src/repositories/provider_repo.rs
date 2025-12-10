@@ -1,7 +1,9 @@
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, DeleteResult};
+use sea_orm::ActiveValue::Set;
 use uuid::Uuid;
+use chrono::Utc;
 
-use crate::{error::{AppError, Result}, models::{user_provider, provider_model}};
+use crate::{error::{AppError, Result}, models::{user_provider::{self, ProviderType}, provider_model}, utils::ToUuidV7};
 
 pub struct ProviderRepo {
     pub pool: DatabaseConnection,
@@ -36,12 +38,45 @@ impl ProviderRepo {
             .map_err(AppError::from)
     }
 
-    pub async fn insert(&self, model: user_provider::ActiveModel) -> Result<user_provider::Model> {
-        model.insert(&self.pool).await.map_err(AppError::from)
+    pub async fn create(
+        &self,
+        user_id: Uuid,
+        name: String,
+        provider_type: ProviderType,
+        url: String,
+        key: Option<String>,
+    ) -> Result<user_provider::Model> {
+        let id = Utc::now().to_uuid_v7();
+        let active = user_provider::ActiveModel {
+            id: Set(id),
+            user_id: Set(user_id),
+            name: Set(name),
+            provider_type: Set(provider_type),
+            url: Set(url),
+            key: Set(key),
+            ..Default::default()
+        };
+        active.insert(&self.pool).await.map_err(AppError::from)
     }
 
-    pub async fn update(&self, model: user_provider::ActiveModel) -> Result<user_provider::Model> {
-        model.update(&self.pool).await.map_err(AppError::from)
+    pub async fn update_provider(
+        &self,
+        id: Uuid,
+        name: Option<String>,
+        provider_type: Option<ProviderType>,
+        url: Option<String>,
+        key: Option<Option<String>>,
+    ) -> Result<user_provider::Model> {
+        let mut active = user_provider::ActiveModel {
+            id: Set(id),
+            ..Default::default()
+        };
+        if let Some(v) = name { active.name = Set(v); }
+        if let Some(v) = provider_type { active.provider_type = Set(v); }
+        if let Some(v) = url { active.url = Set(v); }
+        if let Some(v) = key { active.key = Set(v); }
+
+        active.update(&self.pool).await.map_err(AppError::from)
     }
 
     pub async fn delete_by_id_for_user(&self, user_id: Uuid, id: Uuid) -> Result<DeleteResult> {

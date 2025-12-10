@@ -1,15 +1,10 @@
 use std::sync::Arc;
-
-use chrono::Utc;
-use rust_decimal::Decimal;
-use sea_orm::ActiveValue::Set;
 use uuid::Uuid;
 
 use crate::{
     error::{AppError, Result},
     models::{provider_model, user_provider},
     repositories::{provider_model_repo::ProviderModelRepo, provider_repo::ProviderRepo},
-    utils::ToUuidV7,
     clients::model_info_client::ModelInfoClient,
 };
 
@@ -54,17 +49,7 @@ impl ProviderModelService {
             .ok_or_else(|| AppError::NotFound("Provider not found".to_string()))?;
         let (input_price_per_million, output_price_per_million) = self.model_info_client.fetch_prices(&provider, &model_id).await?;
 
-        let id = Utc::now().to_uuid_v7();
-        let active = provider_model::ActiveModel {
-            id: Set(id),
-            provider_id: Set(provider_id),
-            model_id: Set(model_id),
-            name: Set(name),
-            input_price_per_million: Set(input_price_per_million),
-            output_price_per_million: Set(output_price_per_million),
-            ..Default::default()
-        };
-        self.model_repo.insert(active).await
+        self.model_repo.create(provider_id, model_id, name, input_price_per_million, output_price_per_million).await
     }
 
     pub async fn update(
@@ -84,21 +69,19 @@ impl ProviderModelService {
             }
         }
 
-        let mut active: provider_model::ActiveModel = current.into();
-        let new_model_id_opt = model_id.clone();
-        if let Some(v) = new_model_id_opt.clone() { active.model_id = Set(v); }
-        if let Some(v) = name { active.name = Set(v); }
+        let mut input_price_per_million = None;
+        let mut output_price_per_million = None;
 
         // Refresh price if model ID changed
-        if let Some(ref new_model_id) = new_model_id_opt {
-            let provider = self.provider_repo.get_by_id_for_user(user_id, active.provider_id.clone().unwrap()).await?
+        if let Some(ref new_model_id) = model_id {
+            let provider = self.provider_repo.get_by_id_for_user(user_id, current.provider_id).await?
                 .ok_or_else(|| AppError::NotFound("Provider not found".to_string()))?;
             let (in_price, out_price) = self.model_info_client.fetch_prices(&provider, new_model_id).await?;
-            active.input_price_per_million = Set(in_price);
-            active.output_price_per_million = Set(out_price);
+            input_price_per_million = Some(in_price);
+            output_price_per_million = Some(out_price);
         }
 
-        self.model_repo.update(active).await
+        self.model_repo.update_model(id, model_id, name, input_price_per_million, output_price_per_million).await
     }
 
     pub async fn delete(&self, user_id: Uuid, id: Uuid) -> Result<()> {
