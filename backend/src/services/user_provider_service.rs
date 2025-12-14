@@ -1,14 +1,10 @@
 use std::sync::Arc;
-
-use chrono::Utc;
-use sea_orm::ActiveValue::Set;
 use uuid::Uuid;
 
 use crate::{
     error::{AppError, Result},
     models::{user_provider::{self, ProviderType}, provider_model},
     repositories::provider_repo::ProviderRepo,
-    utils::ToUuidV7,
 };
 
 #[derive(Clone)]
@@ -42,19 +38,7 @@ impl UserProviderService {
             return Err(AppError::Conflict("Provider name already exists".to_string()));
         }
 
-        let id = Utc::now().to_uuid_v7();
-
-        let active = user_provider::ActiveModel {
-            id: Set(id),
-            user_id: Set(user_id),
-            name: Set(name),
-            provider_type: Set(provider_type),
-            url: Set(url),
-            key: Set(key),
-            ..Default::default()
-        };
-
-        self.repo.insert(active).await
+        self.repo.create(user_id, name, provider_type, url, key).await
     }
 
     pub async fn update(
@@ -77,13 +61,7 @@ impl UserProviderService {
             }
         }
 
-        let mut active: user_provider::ActiveModel = current.into();
-        if let Some(name) = name { active.name = Set(name); }
-        if let Some(t) = provider_type { active.provider_type = Set(t); }
-        if let Some(url) = url { active.url = Set(url); }
-        if let Some(maybe_key) = key { active.key = Set(maybe_key); }
-
-        self.repo.update(active).await
+        self.repo.update_provider(id, name, provider_type, url, key).await
     }
 
     pub async fn delete(&self, user_id: Uuid, id: Uuid) -> Result<()> {

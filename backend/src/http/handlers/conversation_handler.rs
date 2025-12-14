@@ -1,16 +1,21 @@
+use std::convert::Infallible;
 use std::sync::Arc;
 
-use axum::{Json, extract::{Path, State}};
+use axum::{
+    extract::{Path, State},
+    response::sse::{Event, KeepAlive, Sse},
+    Json,
+};
+use futures::{Stream, StreamExt};
 use uuid::Uuid;
 use validator::Validate;
 
 use crate::{
     error::Result,
-    http::{dto::{
-        common_schema::ApiResponse,
-        conversation_schema::*,
-    }, extractors::jwt::AuthUser},
-    models::conversation_message,
+    http::{
+        dto::{common_schema::ApiResponse, conversation_schema::*},
+        extractors::jwt::AuthUser,
+    },
     services::conversation_service::ConversationService,
 };
 
@@ -19,7 +24,10 @@ pub async fn list_conversations(
     State(service): State<Arc<ConversationService>>,
 ) -> Result<Json<ApiResponse<ConversationSessionsResponse>>> {
     let items = service.list_sessions(claims.sub).await?;
-    Ok(Json(ApiResponse::success(Some(ConversationSessionsResponse { items }), None::<String>)))
+    Ok(Json(ApiResponse::success(
+        Some(ConversationSessionsResponse { items }),
+        None::<String>,
+    )))
 }
 
 pub async fn create_conversation(
@@ -29,7 +37,13 @@ pub async fn create_conversation(
 ) -> Result<Json<ApiResponse<ConversationResponse>>> {
     let _ = request; // empty body
     let created = service.create_session(claims.sub).await?;
-    Ok(Json(ApiResponse::success(Some(ConversationResponse { id: created.id, items: vec![] }), Some("Conversation created"))))
+    Ok(Json(ApiResponse::success(
+        Some(ConversationResponse {
+            id: created.id,
+            items: vec![],
+        }),
+        Some("Conversation created"),
+    )))
 }
 
 pub async fn list_messages(
@@ -38,7 +52,13 @@ pub async fn list_messages(
     Path(session_id): Path<Uuid>,
 ) -> Result<Json<ApiResponse<ConversationResponse>>> {
     let items = service.list_messages(claims.sub, session_id).await?;
-    Ok(Json(ApiResponse::success(Some(ConversationResponse { id: session_id, items }), None::<String>)))
+    Ok(Json(ApiResponse::success(
+        Some(ConversationResponse {
+            id: session_id,
+            items,
+        }),
+        None::<String>,
+    )))
 }
 
 pub async fn send_message(
@@ -46,10 +66,24 @@ pub async fn send_message(
     State(service): State<Arc<ConversationService>>,
     Path(session_id): Path<Uuid>,
     Json(request): Json<SendMessageRequest>,
-) -> Result<Json<ApiResponse<conversation_message::Model>>> {
+) -> Result<Sse<impl Stream<Item = std::result::Result<Event, Infallible>>>> {
     request.validate()?;
-    let saved = service.send_message(claims.sub, session_id, request.content, request.provider_model_id).await?;
-    Ok(Json(ApiResponse::success(Some(saved), Some("Message sent"))))
+
+    let stream = service
+        .send_message(
+            claims.sub,
+            session_id,
+            request.content,
+            request.provider_model_id,
+        )
+        .await?;
+
+    let sse_stream = stream.map(|res| match res {
+        Ok(text) => Ok(Event::default().data(text)),
+        Err(e) => Ok(Event::default().event("error").data(e.to_string())),
+    });
+
+    Ok(Sse::new(sse_stream).keep_alive(KeepAlive::default()))
 }
 
 pub async fn delete_conversation(
@@ -58,5 +92,11 @@ pub async fn delete_conversation(
     Path(session_id): Path<Uuid>,
 ) -> Result<Json<ApiResponse<ConversationResponse>>> {
     service.delete_session(claims.sub, session_id).await?;
-    Ok(Json(ApiResponse::success(Some(ConversationResponse { id: session_id, items: vec![] }), Some("Conversation deleted"))))
+    Ok(Json(ApiResponse::success(
+        Some(ConversationResponse {
+            id: session_id,
+            items: vec![],
+        }),
+        Some("Conversation deleted"),
+    )))
 }
