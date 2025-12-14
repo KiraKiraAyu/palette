@@ -1,8 +1,13 @@
-use std::sync::Arc;
-use bcrypt::{DEFAULT_COST, hash, verify};
+use crate::{
+    config::JwtConfig,
+    error::{AppError, Result},
+    http::dto::auth_schema::{AuthResponse, Claims},
+    repositories::user_repo::UserRepo,
+};
+use bcrypt::{hash, verify, DEFAULT_COST};
 use chrono::Utc;
-use jsonwebtoken::{Header, encode};
-use crate::{config::JwtConfig, error::{AppError, Result}, http::dto::auth_schema::{AuthResponse, Claims}, repositories::user_repo::UserRepo};
+use jsonwebtoken::{encode, Header};
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct AuthService {
@@ -15,7 +20,12 @@ impl AuthService {
         Self { repo, jwt_config }
     }
 
-    pub async fn register(&self, email: String, name: String, password: String) -> Result<AuthResponse> {
+    pub async fn register(
+        &self,
+        email: String,
+        name: String,
+        password: String,
+    ) -> Result<AuthResponse> {
         let email = email.to_lowercase();
 
         if self.repo.get_user_by_email(&email).await?.is_some() {
@@ -32,8 +42,11 @@ impl AuthService {
 
         let created_user = self.repo.create(email, name, password_hash).await?;
         let token = self.generate_token(created_user.id)?;
-        
-        Ok(AuthResponse { token, user_info: created_user })
+
+        Ok(AuthResponse {
+            token,
+            user_info: created_user,
+        })
     }
 
     pub async fn login(&self, email: String, password: String) -> Result<AuthResponse> {
@@ -43,18 +56,26 @@ impl AuthService {
 
         if let Some(user) = user {
             let password_hash = user.password_hash.clone();
-            let is_password_correct = tokio::task::spawn_blocking(move || verify(&password, &password_hash))
-                .await
-                .map_err(|e| AppError::Internal(e.to_string()))??;
+            let is_password_correct =
+                tokio::task::spawn_blocking(move || verify(&password, &password_hash))
+                    .await
+                    .map_err(|e| AppError::Internal(e.to_string()))??;
 
             if is_password_correct {
                 let token = self.generate_token(user.id)?;
-                Ok(AuthResponse { token, user_info: user })
+                Ok(AuthResponse {
+                    token,
+                    user_info: user,
+                })
             } else {
-                Err(AppError::Forbidden("Incorrect email or password".to_string()))
+                Err(AppError::Forbidden(
+                    "Incorrect email or password".to_string(),
+                ))
             }
         } else {
-            Err(AppError::Forbidden("Incorrect email or password".to_string()))
+            Err(AppError::Forbidden(
+                "Incorrect email or password".to_string(),
+            ))
         }
     }
 
@@ -64,11 +85,13 @@ impl AuthService {
         let now = Utc::now();
         let exp = now.timestamp() + &self.jwt_config.expires_in;
 
-        let claims = Claims {
-            sub: user_id,
-            exp,
-        };
+        let claims = Claims { sub: user_id, exp };
 
-        encode(&Header::default(), &claims, &self.jwt_config.encoding_key).map_err(AppError::from)
+        encode(
+            &Header::new(jsonwebtoken::Algorithm::RS256),
+            &claims,
+            &self.jwt_config.encoding_key,
+        )
+        .map_err(|_| AppError::Internal("Failed to generate token".to_string()))
     }
 }
