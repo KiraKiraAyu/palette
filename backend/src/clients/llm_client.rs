@@ -1,4 +1,6 @@
 use async_trait::async_trait;
+use eventsource_stream::Eventsource;
+use futures::stream::{BoxStream, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -17,18 +19,18 @@ pub struct ChatMessagePayload {
 pub struct ChatRequestPayload {
     pub model: String,
     pub messages: Vec<ChatMessagePayload>,
+    pub stream: bool,
 }
 
 #[derive(Debug, Deserialize)]
-struct ChoiceMessage {
-    role: String,
-    content: String,
+struct ChoiceDelta {
+    content: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 struct Choice {
     index: usize,
-    message: ChoiceMessage,
+    delta: ChoiceDelta,
 }
 
 #[derive(Debug, Deserialize)]
@@ -38,7 +40,12 @@ struct ChatResponsePayload {
 
 #[async_trait]
 pub trait LlmClient: Send + Sync {
-    async fn chat(&self, provider: &ProviderModel, model_id: &str, messages: Vec<ChatMessagePayload>) -> Result<String>;
+    async fn chat(
+        &self,
+        provider: &ProviderModel,
+        model_id: &str,
+        messages: Vec<ChatMessagePayload>,
+    ) -> Result<BoxStream<'static, Result<String>>>;
 }
 
 #[derive(Clone)]
@@ -49,7 +56,7 @@ pub struct DefaultLlmClient {
 impl Default for DefaultLlmClient {
     fn default() -> Self {
         let http = reqwest::Client::builder()
-            .timeout(Duration::from_secs(20))
+            .timeout(Duration::from_secs(60))
             .build()
             .unwrap_or_else(|_| reqwest::Client::new());
         Self { http }
@@ -58,28 +65,86 @@ impl Default for DefaultLlmClient {
 
 #[async_trait]
 impl LlmClient for DefaultLlmClient {
-    async fn chat(&self, provider: &ProviderModel, model_id: &str, messages: Vec<ChatMessagePayload>) -> Result<String> {
+    async fn chat(
+        &self,
+        provider: &ProviderModel,
+        model_id: &str,
+        messages: Vec<ChatMessagePayload>,
+    ) -> Result<BoxStream<'static, Result<String>>> {
         let base = provider.url.trim_end_matches('/');
         if !base.starts_with("https://") {
-            return Err(AppError::BadRequest("Provider URL must be https".to_string()));
+            return Err(AppError::BadRequest(
+                "Provider URL must be https".to_string(),
+            ));
         }
         let url = format!("{}/v1/chat/completions", base);
 
-        let payload = ChatRequestPayload { model: model_id.to_string(), messages };
-        let mut req = self.http.post(url).json(&payload);
-        if let Some(k) = provider.key.clone() { req = req.bearer_auth(k); }
+        let payload = ChatRequestPayload {
+            model: model_id.to_string(),
+            messages,
+            stream: true,
+        };
 
-        let resp = req.send().await.map_err(|e| AppError::Internal(format!("调用模型接口失败: {}", e)))?;
+        let mut req = self.http.post(url).json(&payload);
+        if let Some(k) = provider.key.clone() {
+            req = req.bearer_auth(k);
+        }
+
+        let resp = req
+            .send()
+            .await
+            .map_err(|e| AppError::Internal(format!("Failed to call model API: {}", e)))?;
+
         let status = resp.status();
         if !status.is_success() {
             let body = resp.text().await.unwrap_or_default();
-            return Err(AppError::BadRequest(format!("API error: {} {}", status, body)));
+            return Err(AppError::BadRequest(format!(
+                "API error: {} {}",
+                status, body
+            )));
         }
-        let parsed: ChatResponsePayload = resp.json().await
-            .map_err(|e| AppError::Internal(format!("解析模型响应失败: {}", e)))?;
-        let content = parsed.choices.get(0)
-            .map(|c| c.message.content.clone())
-            .ok_or_else(|| AppError::Internal("模型未返回内容".to_string()))?;
-        Ok(content)
+
+        let stream = resp
+            .bytes_stream()
+            .eventsource()
+            .map(|event| {
+                match event {
+                    Ok(event) => {
+                        if event.data == "[DONE]" {
+                            None
+                        } else {
+                            match serde_json::from_str::<ChatResponsePayload>(&event.data) {
+                                Ok(parsed) => {
+                                    if let Some(choice) = parsed.choices.first() {
+                                        if let Some(content) = choice.delta.content.clone() {
+                                            if !content.is_empty() {
+                                                return Some(Ok(content));
+                                            }
+                                        }
+                                    }
+                                    // Empty content or no choices, skip
+                                    Some(Ok("".to_string()))
+                                }
+                                Err(e) => Some(Err(AppError::Internal(format!(
+                                    "Failed to parse SSE data: {} | Data: {}",
+                                    e, event.data
+                                )))),
+                            }
+                        }
+                    }
+                    Err(e) => Some(Err(AppError::Internal(format!("Stream error: {}", e)))),
+                }
+            })
+            // Filter out None (DONE) and empty strings to clean up the stream
+            .take_while(|x| futures::future::ready(x.is_some()))
+            .map(|x| x.unwrap())
+            .filter(|x| {
+                futures::future::ready(match x {
+                    Ok(s) => !s.is_empty(),
+                    Err(_) => true,
+                })
+            });
+
+        Ok(Box::pin(stream))
     }
 }
