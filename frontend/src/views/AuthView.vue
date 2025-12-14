@@ -14,12 +14,12 @@
             <span>Please log in</span>
           </div>
 
-          <input
+          <BaseInput
             type="email"
             placeholder="Email"
             class="bg-gray-100 border-none w-full py-3 px-4 rounded-full mb-3 outline-none focus:ring-2 focus:ring-blue-400 transition-all"
           />
-          <input
+          <BaseInput
             type="password"
             placeholder="Password"
             class="bg-gray-100 border-none w-full py-3 px-4 rounded-full mb-2 outline-none focus:ring-2 focus:ring-blue-400 transition-all"
@@ -51,17 +51,17 @@
         >
           <h1 class="font-bold text-3xl mb-4 text-gray-800">Create a account</h1>
 
-          <input
+          <BaseInput
             type="text"
             placeholder="Username"
             class="bg-gray-100 border-none w-full py-3 px-4 rounded-full mb-3 outline-none focus:ring-2 focus:ring-blue-400 transition-all"
           />
-          <input
+          <BaseInput
             type="email"
             placeholder="Email"
             class="bg-gray-100 border-none w-full py-3 px-4 rounded-full mb-3 outline-none focus:ring-2 focus:ring-blue-400 transition-all"
           />
-          <input
+          <BaseInput
             type="password"
             placeholder="Password"
             class="bg-gray-100 border-none w-full py-3 px-4 rounded-full mb-6 outline-none focus:ring-2 focus:ring-blue-400 transition-all"
@@ -123,6 +123,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import BaseButton from '@/components/BaseButton.vue'
+import BaseInput from '@/components/BaseInput.vue'
 
 const isSignUp = ref(false)
 
