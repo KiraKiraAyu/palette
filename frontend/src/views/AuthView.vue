@@ -17,12 +17,12 @@
           <BaseInput
             type="email"
             placeholder="Email"
-            class="bg-gray-100 border-none w-full py-3 px-4 rounded-full mb-3 outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+            class="w-full"
           />
           <BaseInput
             type="password"
             placeholder="Password"
-            class="bg-gray-100 border-none w-full py-3 px-4 rounded-full mb-2 outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+            class="w-full"
           />
 
           <a
@@ -42,8 +42,8 @@
       </div>
 
       <div
-        class="absolute top-0 left-0 h-full w-1/2 transition-all duration-700 ease-in-out opacity-0 z-1"
-        :class="{ 'translate-x-full opacity-100 z-3': isSignUp }"
+        class="absolute top-0 left-0 h-full w-1/2 transition-all duration-700 ease-in-out"
+        :class="isSignUp ? 'translate-x-full opacity-100 z-3' : 'z-1 opacity-0'"
       >
         <form
           class="bg-white flex flex-col items-center justify-center h-full px-12 text-center"
@@ -54,17 +54,17 @@
           <BaseInput
             type="text"
             placeholder="Username"
-            class="bg-gray-100 border-none w-full py-3 px-4 rounded-full mb-3 outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+            class="w-full"
           />
           <BaseInput
             type="email"
             placeholder="Email"
-            class="bg-gray-100 border-none w-full py-3 px-4 rounded-full mb-3 outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+            class="w-full"
           />
           <BaseInput
             type="password"
             placeholder="Password"
-            class="bg-gray-100 border-none w-full py-3 px-4 rounded-full mb-6 outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+            class="w-full"
           />
 
           <BaseButton
@@ -87,7 +87,6 @@
         >
           <div
             class="flex flex-col items-center justify-center text-center w-1/2 h-full px-10 transition-transform duration-700 ease-in-out transform translate-x-0"
-            :class="{ 'translate-x-0': isSignUp }"
           >
             <h1 class="font-bold text-4xl mb-4">Already have a account?</h1>
             <BaseButton
@@ -102,7 +101,6 @@
 
           <div
             class="flex flex-col items-center justify-center text-center w-1/2 h-full px-10 transition-transform duration-700 ease-in-out transform translate-x-0"
-            :class="{ 'translate-x-0': isSignUp }"
           >
             <h1 class="font-bold text-4xl mb-4">Not have a account yet?</h1>
             <BaseButton
