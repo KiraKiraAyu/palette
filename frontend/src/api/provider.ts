@@ -1,5 +1,5 @@
-import type { UserProvider } from "@/types/provider";
-import request from "@/utils/request";
+import type { UserProvider } from "@/types/provider"
+import request from "@/utils/request"
 
 enum Api {
     UserProviders = "/api/user_providers",
