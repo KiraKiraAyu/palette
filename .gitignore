@@ -37,6 +37,7 @@ __screenshots__/
 # Secrets
 .env
 *.pem
+*.key
 
 # Rust
 target/
