@@ -1,13 +1,22 @@
+import { loginApi, registerApi } from "@/api/user";
+import type { LoginRequest, RegisterRequest } from "@/types/user";
 import { defineStore } from "pinia";
 
 export const useUserStore = defineStore("user", () => {
-    let token = ''
-    const logout = () => {
-        
+    let token: string = ''
+    const login = (loginForm: LoginRequest) => {
+        loginApi(loginForm)
     }
 
-    const login = (email: string, password: string) => {
-        
+    const logout = () => {
+        token = ''
     }
-    return { token, logout, login }
+
+    const register = (registerForm: RegisterRequest) => {
+        registerApi(registerForm).then((res => (
+            token = res.token
+        )))
+    }
+
+    return { token, logout, login, register }
 })

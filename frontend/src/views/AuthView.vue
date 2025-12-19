@@ -18,11 +18,13 @@
             type="email"
             placeholder="Email"
             class="w-full"
+            v-model="loginForm.email"
           />
           <BaseInput
             type="password"
             placeholder="Password"
             class="w-full"
+            v-model="loginForm.password"
           />
 
           <a
@@ -47,7 +49,7 @@
       >
         <form
           class="bg-white flex flex-col items-center justify-center h-full px-12 text-center"
-          @submit.prevent
+          @submit.prevent=""
         >
           <h1 class="font-bold text-3xl mb-4 text-gray-800">Create a account</h1>
 
@@ -55,16 +57,19 @@
             type="text"
             placeholder="Username"
             class="w-full"
+            v-model="signUpForm.username"
           />
           <BaseInput
             type="email"
             placeholder="Email"
             class="w-full"
+            v-model="signUpForm.email"
           />
           <BaseInput
             type="password"
             placeholder="Password"
             class="w-full"
+            v-model="signUpForm.password"
           />
 
           <BaseButton
@@ -119,11 +124,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseInput from '@/components/BaseInput.vue'
+import { loginApi, registerApi } from '@/api/user'
+import type { LoginRequest, RegisterRequest } from '@/types/user'
 
 const isSignUp = ref(false)
 
 const toggleMode = () => { isSignUp.value = !isSignUp.value }
+
+const loginForm = reactive<LoginRequest>({
+  email: "",
+  password: "",
+})
+
+const signUpForm = reactive<RegisterRequest>({
+  username: "",
+  email: "",
+  password: "",
+})
+
+const submitLoginForm = () => {
+  loginApi(loginForm)
+}
+
+const submitSignUpForm = () => {
+  registerApi(signUpForm)
+}
 </script>
