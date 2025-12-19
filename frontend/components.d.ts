@@ -27,6 +27,7 @@ declare module 'vue' {
     ILucideSquare: typeof import('~icons/lucide/square')['default']
     ILucideTextAlignJustify: typeof import('~icons/lucide/text-align-justify')['default']
     ILucideTrash2: typeof import('~icons/lucide/trash2')['default']
+    MessageToast: typeof import('./src/components/MessageToast.vue')['default']
     ModelSettings: typeof import('./src/components/ModelSettings.vue')['default']
     ModelsSettings: typeof import('./src/components/ModelsSettings.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

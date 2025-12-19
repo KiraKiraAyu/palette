@@ -7,7 +7,7 @@
       >
         <form
           class="bg-white flex flex-col items-center justify-center h-full px-12 text-center"
-          @submit.prevent
+          @submit.prevent="handleLogin"
         >
           <h1 class="font-bold text-3xl mb-4 text-gray-800">Welcome back</h1>
           <div class="social-container mb-4 text-gray-400 text-sm">
@@ -37,6 +37,7 @@
             variant="primary"
             size="md"
             class="mt-2 font-semibold tracking-wider uppercase"
+            :disabled="isAuthenticating"
           >
             Log in
           </BaseButton>
@@ -49,7 +50,7 @@
       >
         <form
           class="bg-white flex flex-col items-center justify-center h-full px-12 text-center"
-          @submit.prevent=""
+          @submit.prevent="handleRegister"
         >
           <h1 class="font-bold text-3xl mb-4 text-gray-800">Create a account</h1>
 
@@ -99,6 +100,7 @@
               size="md"
               class="border-white text-white hover:bg-white hover:text-light-text font-semibold tracking-wider uppercase"
               @click="toggleMode"
+              :disabled="isAuthenticating"
             >
               Go to Log in
             </BaseButton>
@@ -127,12 +129,17 @@
 import { reactive, ref } from 'vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseInput from '@/components/BaseInput.vue'
-import { loginApi, registerApi } from '@/api/user'
 import type { LoginRequest, RegisterRequest } from '@/types/user'
+import { useUserStore } from '@/stores'
+import { useRouter } from 'vue-router'
 
 const isSignUp = ref(false)
+const isAuthenticating = ref(false)
+const router = useRouter()
 
 const toggleMode = () => { isSignUp.value = !isSignUp.value }
+
+const userStore = useUserStore()
 
 const loginForm = reactive<LoginRequest>({
   email: "",
@@ -145,11 +152,27 @@ const signUpForm = reactive<RegisterRequest>({
   password: "",
 })
 
-const submitLoginForm = () => {
-  loginApi(loginForm)
+const handleLogin = async () => {
+  isAuthenticating.value = true
+  try {
+    await userStore.login(loginForm)
+    router.push('/chat')
+  } catch (error) {
+    // TODO
+  } finally {
+    isAuthenticating.value = false
+  }
 }
 
-const submitSignUpForm = () => {
-  registerApi(signUpForm)
+const handleRegister = async () => {
+  isAuthenticating.value = true
+  try {
+    await userStore.register(signUpForm)
+    router.push('/chat')
+  } catch (error) {
+    // TODO
+  } finally {
+    isAuthenticating.value = false
+  }
 }
 </script>
