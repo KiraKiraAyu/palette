@@ -58,7 +58,7 @@
             type="text"
             placeholder="Username"
             class="w-full"
-            v-model="signUpForm.username"
+            v-model="signUpForm.name"
           />
           <BaseInput
             type="email"
@@ -147,7 +147,7 @@ const loginForm = reactive<LoginRequest>({
 })
 
 const signUpForm = reactive<RegisterRequest>({
-  username: "",
+  name: "",
   email: "",
   password: "",
 })

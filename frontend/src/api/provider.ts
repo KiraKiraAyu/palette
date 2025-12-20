@@ -1,4 +1,4 @@
-import type { UserProvider } from "@/types/provider"
+import type { CreateProviderRequest, UserProvider } from "@/types/provider"
 import request from "@/utils/request"
 
 enum Api {
@@ -10,8 +10,8 @@ export function getUserProvidersApi() {
     return request.get<UserProvider[]>(Api.UserProviders)
 }
 
-export function createUserProviderApi() {
-    return request.post<UserProvider>(Api.UserProviders)
+export function createUserProviderApi(data: CreateProviderRequest) {
+    return request.post<UserProvider>(Api.UserProviders, data)
 }
 
 export function updateUserProviderApi(id: string, data: Partial<UserProvider>) {
