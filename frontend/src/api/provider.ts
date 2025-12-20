@@ -2,8 +2,8 @@ import type { UserProvider } from "@/types/provider"
 import request from "@/utils/request"
 
 enum Api {
-    UserProviders = "/api/user_providers",
-    Check = "/api/user_providers/check"
+    UserProviders = "/api/providers",
+    Check = "/api/providers/check"
 }
 
 export function getUserProvidersApi() {
