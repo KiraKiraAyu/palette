@@ -132,6 +132,7 @@ import BaseInput from '@/components/BaseInput.vue'
 import type { LoginRequest, RegisterRequest } from '@/types/user'
 import { useUserStore } from '@/stores'
 import { useRouter } from 'vue-router'
+import { useToast } from '@/composables/useToast'
 
 const isSignUp = ref(false)
 const isAuthenticating = ref(false)
@@ -140,6 +141,7 @@ const router = useRouter()
 const toggleMode = () => { isSignUp.value = !isSignUp.value }
 
 const userStore = useUserStore()
+const toast = useToast()
 
 const loginForm = reactive<LoginRequest>({
   email: "",
@@ -156,9 +158,10 @@ const handleLogin = async () => {
   isAuthenticating.value = true
   try {
     await userStore.login(loginForm)
+    toast.success("Login successful")
     router.push('/chat')
   } catch (error) {
-    // TODO
+    toast.error("Login failed: " + error)
   } finally {
     isAuthenticating.value = false
   }
@@ -168,9 +171,10 @@ const handleRegister = async () => {
   isAuthenticating.value = true
   try {
     await userStore.register(signUpForm)
+    toast.success("Register successful")
     router.push('/chat')
   } catch (error) {
-    // TODO
+    toast.error("Register failed: " + error)
   } finally {
     isAuthenticating.value = false
   }
