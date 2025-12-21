@@ -1,13 +1,27 @@
-import type { CreateProviderRequest, UserProvider } from "@/types/provider"
+import type { CreateProviderRequest, UserProvider, ProviderModel } from "@/types/provider"
 import request from "@/utils/request"
 
 enum Api {
     UserProviders = "/api/providers",
-    Check = "/api/providers/check"
+    UserProvider = "/api/providers/{id}",
+    Check = "/api/providers/check/{id}"
 }
 
-export function getUserProvidersApi() {
-    return request.get<UserProvider[]>(Api.UserProviders)
+interface ProviderWithModels {
+    provider: UserProvider
+    models: ProviderModel[]
+}
+
+interface ProviderListResponse {
+    items: ProviderWithModels[]
+}
+
+export async function getUserProvidersApi() {
+    const data = await request.get<ProviderListResponse>(Api.UserProviders)
+    return data.items.map(item => ({
+        ...item.provider,
+        models: item.models
+    }))
 }
 
 export function createUserProviderApi(data: CreateProviderRequest) {
@@ -15,13 +29,13 @@ export function createUserProviderApi(data: CreateProviderRequest) {
 }
 
 export function updateUserProviderApi(id: string, data: Partial<UserProvider>) {
-    return request.put<UserProvider>(`${Api.UserProviders}/${id}`, data)
+    return request.put<UserProvider>(Api.UserProvider.replace("{id}", id), data)
 }
 
 export function deleteUserProviderApi(id: string) {
-    return request.delete<never>(`${Api.UserProviders}/${id}`)
+    return request.delete<never>(Api.UserProvider.replace("{id}", id))
 }
 
 export function checkUserProviderApi(id: string) {
-    return request.post<never>(`${Api.Check}/${id}`)
+    return request.post<never>(Api.Check.replace("{id}", id))
 }
