@@ -1,8 +1,9 @@
-import router from "@/router";
-import { useUserStore } from "@/stores";
-import type { ApiResponse } from "@/types/api";
-import type { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from "axios";
-import axios from "axios";
+import router from "@/router"
+import { useUserStore } from "@/stores"
+import type { ApiResponse } from "@/types/api"
+import type { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from "axios"
+import axios from "axios"
+import { useToast } from "@/composables/useToast"
 
 const service: AxiosInstance = axios.create({
     headers: { 'Content-Type': 'application/json' },
@@ -26,9 +27,15 @@ service.interceptors.response.use(
     (response: AxiosResponse<ApiResponse>) => {
         const res = response.data
         if (res.success) return res.data as unknown as AxiosResponse
+        const { error } = useToast()
+        error(res.error || 'Unknown error')
         return Promise.reject(new Error(res.error || 'Unknown error'))
     },
     (error: AxiosError) => {
+        const { error: toastError } = useToast()
+        const errorMsg = (error.response?.data as any)?.error || error.message || 'Unknown error'
+        toastError(errorMsg)
+
         if (error.status == 401) {
             const userStore = useUserStore()
             userStore.logout()
