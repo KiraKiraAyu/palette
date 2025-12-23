@@ -1,4 +1,4 @@
-import type { CreateProviderRequest, UserProvider, ProviderModel } from "@/types/provider"
+import type { CreateProviderRequest, UserProvider, ProviderModel, UpdateProviderRequest } from "@/types/provider"
 import request from "@/utils/request"
 
 enum Api {
@@ -28,7 +28,7 @@ export function createUserProviderApi(data: CreateProviderRequest) {
     return request.post<UserProvider>(Api.UserProviders, data)
 }
 
-export function updateUserProviderApi(id: string, data: Partial<UserProvider>) {
+export function updateUserProviderApi(id: string, data: UpdateProviderRequest) {
     return request.put<UserProvider>(Api.UserProvider.replace("{id}", id), data)
 }
 
