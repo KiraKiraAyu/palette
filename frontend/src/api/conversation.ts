@@ -71,11 +71,17 @@ export function sendMessageApi(
             }
 
             try {
+                let currentEventData = ""
+                let hasEventData = false
                 let buffer = ""
+
                 while (true) {
                     const { done, value } = await reader.read()
 
                     if (done) {
+                        if (hasEventData) {
+                             onMessage(currentEventData) 
+                        }
                         onComplete?.()
                         break
                     }
@@ -85,11 +91,20 @@ export function sendMessageApi(
                     buffer = lines.pop() || ""
 
                     for (const line of lines) {
-                        if (line.startsWith("data: ")) {
-                            const data = line.slice(6)
-                            if (data.trim()) {
-                                onMessage(data)
+                        if (line === "") {
+                            // Empty line indicates end of event
+                            if (hasEventData) {
+                                onMessage(currentEventData)
+                                currentEventData = ""
+                                hasEventData = false
                             }
+                        } else if (line.startsWith("data: ")) {
+                            const data = line.slice(6)
+                            if (hasEventData) {
+                                currentEventData += "\n"
+                            }
+                            currentEventData += data
+                            hasEventData = true
                         } else if (line.startsWith("event: error")) {
                             console.error("Received error event from stream")
                         }
