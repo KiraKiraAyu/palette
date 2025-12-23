@@ -5,10 +5,12 @@
         :disabled="disabled"
         class="h-12 aspect-square flex flex-nowrap w-full items-center gap-2 p-0! border-0!"
     >
-        <div class="flex h-full aspect-square justify-center items-center shrink-0">
+        <div
+            class="flex h-full aspect-square items-center justify-center shrink-0"
+            v-if="$slots.default">
             <slot></slot>
         </div>
-        <span class="transition-opacity whitespace-nowrap" :class="folded ? 'opacity-0' : ''">{{ label }}</span>
+        <span class="transition-opacity whitespace-nowrap" :class="{ 'opacity-0': folded, 'p-6': !$slots.default}">{{ label }}</span>
     </BaseButton>
 </template>
 
@@ -28,6 +30,7 @@ const {
     label, 
     variant = 'primary', 
     size = 'md', 
-    disabled = false 
+    disabled = false,
+
 } = defineProps<Props>()
 </script>
