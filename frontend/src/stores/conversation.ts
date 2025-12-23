@@ -1,6 +1,6 @@
 import { defineStore } from "pinia"
 import { ref } from "vue"
-import type { ConversationSession, ConversationMessage } from "@/types/conversation"
+import { type ConversationSession, type ConversationMessage, ChatRole } from "@/types/conversation"
 import { 
     listConversationsApi, 
     createConversationApi, 
@@ -60,7 +60,7 @@ export const useConversationStore = defineStore("conversation", () => {
         const userMsg: ConversationMessage = {
             id: 'temp-' + Date.now(),
             session_id: conversationId,
-            role: 'user',
+            role: ChatRole.User,
             content: content,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -70,7 +70,7 @@ export const useConversationStore = defineStore("conversation", () => {
         const assistantMsg: ConversationMessage = {
             id: 'temp-ai-' + Date.now(),
             session_id: conversationId,
-            role: 'assistant',
+            role: ChatRole.Assistant,
             content: '',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()

@@ -28,15 +28,22 @@
                 </div>
 
                 <div v-else class="flex flex-col gap-6">
-                    <div v-for="msg in messages" :key="msg.id" class="flex flex-col gap-2">
-                        <div class="font-bold text-sm text-gray-600 uppercase">{{ msg.role }}</div>
-                        <div 
-                            class="bg-gray-50 p-4 rounded-2xl shadow-sm prose prose-sm max-w-none prose-pre:bg-gray-800 prose-pre:text-gray-100"
-                            :class="{ 'bg-blue-50': msg.role === 'user' }"
+                    <div v-for="msg in messages" :key="msg.id" class="flex flex-col gap-2" :class="{ 'items-end': msg.role === ChatRole.User }">
+                        <div
+                            class="font-bold text-sm text-gray-600 uppercase"
+                            :class="{ 'text-right': msg.role === ChatRole.User }"
                         >
-                            <div v-html="renderMarkdown(msg.content)"></div>
+                            {{ msg.role }}
+                        </div>
+                        <div
+                            class="p-4 prose prose-sm prose-pre:bg-gray-800 prose-pre:text-gray-100"
+                            :class="msg.role === ChatRole.User ? 'bg-blue-50 rounded-full max-w-[50%]': 'max-w-none'"
+                        >
+                            <div v-if="msg.role === ChatRole.Assistant" v-html="renderMarkdown(msg.content)"></div>
+                            <div v-else>{{ msg.content }}</div>
                         </div>
                     </div>
+                    <div class="h-16"></div>
                 </div>
             </div>
         </div>
@@ -63,6 +70,7 @@ import { storeToRefs } from 'pinia'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github.css'
+import { ChatRole } from '@/types/conversation'
 
 const providerStore = useProviderStore()
 const conversationStore = useConversationStore()

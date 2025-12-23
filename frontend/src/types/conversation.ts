@@ -1,11 +1,13 @@
-export interface ChatRole {
-    role: "system" | "user" | "assistant"
+export enum ChatRole {
+    System = "System",
+    User = "User",
+    Assistant = "Assistant",
 }
 
 export interface ConversationMessage {
     id: string
     session_id: string
-    role: "system" | "user" | "assistant"
+    role: ChatRole
     content: string
     created_at: string
     updated_at: string
