@@ -160,8 +160,6 @@ const handleLogin = async () => {
     await userStore.login(loginForm)
     toast.success("Login successful")
     router.push('/chat')
-  } catch (error) {
-    toast.error("Login failed: " + error)
   } finally {
     isAuthenticating.value = false
   }
@@ -173,8 +171,6 @@ const handleRegister = async () => {
     await userStore.register(signUpForm)
     toast.success("Register successful")
     router.push('/chat')
-  } catch (error) {
-    toast.error("Register failed: " + error)
   } finally {
     isAuthenticating.value = false
   }
