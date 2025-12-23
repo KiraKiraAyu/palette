@@ -5,6 +5,13 @@ export interface CreateProviderRequest {
     key?: string
 }
 
+export interface UpdateProviderRequest {
+    name?: string
+    provider_type?: string
+    url?: string
+    key?: string
+}
+
 export interface UserProvider {
     id: string
     user_id: string

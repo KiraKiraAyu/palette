@@ -7,7 +7,6 @@ export const useProviderStore = defineStore("provider", () => {
     const providers = ref<UserProvider[]>([])
     const selectedProviderId = ref<string | null>(null)
     const selectedProvider = ref<UserProvider | null>(null)
-    const isDirty = ref(false)
     const isAdding = ref(false)
     const draftProvider = ref<CreateProviderRequest>({
         name: '',
@@ -15,17 +14,26 @@ export const useProviderStore = defineStore("provider", () => {
         url: '',
         key: ''
     })
-    let originalState: string = '[]'
+    const selectedModelId = ref<string | null>(null)
+    const selectedModel = ref<string | null>(null)
+
 
     const fetchProviders = async () => {
         const data = await getUserProvidersApi()
         providers.value = data
-        originalState = JSON.stringify(providers.value)
         // For type checking
         const firstProvider = providers.value[0]
         if (firstProvider) {
             selectedProviderId.value = firstProvider.id
             selectedProvider.value = firstProvider
+            const models = firstProvider.models
+            if (models && models.length > 0) {
+                const firstModel = models[0]
+                if (firstModel) {
+                    selectedModelId.value = firstModel.id
+                    selectedModel.value = firstModel.model_id
+                }
+            }
         }
     }
 
@@ -33,12 +41,35 @@ export const useProviderStore = defineStore("provider", () => {
         isAdding.value = false
         selectedProviderId.value = id
         selectedProvider.value = providers.value.find(p => p.id === id) || null
+        // Reset model when provider changes to the first available model
+        const models = selectedProvider.value?.models
+        if (models && models.length > 0) {
+            const firstModel = models[0]
+            if (firstModel) {
+                selectedModelId.value = firstModel.id
+                selectedModel.value = firstModel.model_id
+            }
+        } else {
+            selectedModelId.value = null
+            selectedModel.value = null
+        }
+    }
+
+    const selectModel = (id: string) => {
+        selectedModelId.value = id
+        const models = selectedProvider.value?.models
+        if (models) {
+            const model = models.find(m => m.id === id)
+            selectedModel.value = model ? model.model_id : null
+        }
     }
 
     const newProvider = () => {
         isAdding.value = true
         selectedProviderId.value = null
         selectedProvider.value = null
+        selectedModelId.value = null
+        selectedModel.value = null
         draftProvider.value = {
             name: 'New Provider',
             provider_type: 'OpenAI',
@@ -57,39 +88,21 @@ export const useProviderStore = defineStore("provider", () => {
 
     const saveNewProvider = async () => {
         const payload = { ...draftProvider.value }
-        if (!payload.key) {
-            delete payload.key
-        }
         const newProviderData = await createUserProviderApi(payload)
         await fetchProviders()
         selectProvider(newProviderData.id)
         isAdding.value = false
     }
 
-    const saveProviders = async () => {
-        for (const provider of providers.value) {
-            const originalProvider = JSON.parse(originalState).find((p: UserProvider) => p.id === provider.id)
-            if (!originalProvider) {
-                return
-            } else if (JSON.stringify(provider) !== JSON.stringify(originalProvider)) {
-                await updateUserProviderApi(provider.id, provider);
-            }
-        }
+    const saveProviders = async (provider: UserProvider) => {
+        await updateUserProviderApi(provider.id, {
+            name: provider.name,
+            provider_type: provider.provider_type,
+            url: provider.url,
+            key: provider.key,
+        })
         await fetchProviders()
-        isDirty.value = false
     }
-
-    watch(providers, (newValue) => {
-        if (JSON.stringify(newValue) !== originalState) {
-            isDirty.value = true;
-        } else {
-            isDirty.value = false;
-        }
-        // update selected provider
-        if (selectedProviderId.value) {
-            selectedProvider.value = providers.value.find(p => p.id === selectedProviderId.value) || null
-        }
-    }, { deep: true })
 
     const checkProvider = async (id: string) => {
         await checkUserProviderApi(id)
@@ -99,11 +112,13 @@ export const useProviderStore = defineStore("provider", () => {
         providers,
         selectedProviderId,
         selectedProvider,
-        isDirty,
+        selectedModelId,
+        selectedModel,
         isAdding,
         draftProvider,
         fetchProviders,
         selectProvider,
+        selectModel,
         newProvider,
         cancelAdding,
         saveNewProvider,
