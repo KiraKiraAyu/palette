@@ -39,13 +39,22 @@
                             class="p-4 prose prose-sm prose-pre:bg-gray-800 prose-pre:text-gray-100"
                             :class="msg.role === ChatRole.User ? 'bg-blue-50 rounded-full max-w-[50%]': 'max-w-none'"
                         >
-                            <div v-if="msg.role === ChatRole.Assistant" v-html="renderMarkdown(msg.content)"></div>
+                            <div v-if="msg.role === ChatRole.Assistant">
+                                <div v-if="msg.content" v-html="renderMarkdown(msg.content)"></div>
+                                <BaseLoading v-else-if="conversationStore.streaming" class="w-4 h-4" />
+                            </div>
                             <div v-else>{{ msg.content }}</div>
                         </div>
                     </div>
                     <div class="h-16"></div>
                 </div>
             </div>
+
+            <Transition name="fade">
+                <div v-if="conversationStore.loading" class="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-20">
+                    <BaseLoading class="w-8 h-8" />
+                </div>
+            </Transition>
         </div>
         
         <div class="absolute w-full flex justify-center p-4 bg-linear-to-t pt-12 transition-all duration-500"
@@ -60,10 +69,23 @@
     </div>
 </template>
 
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+</style>
+
 <script setup lang="ts">
 import { computed, ref, nextTick, watch } from 'vue'
 import ChatInput from './ChatInput.vue'
 import BaseSelect from './BaseSelect.vue'
+import BaseLoading from './BaseLoading.vue'
 import { useProviderStore } from '@/stores/provider'
 import { useConversationStore } from '@/stores/conversation'
 import { storeToRefs } from 'pinia'
