@@ -7,7 +7,7 @@
       >
         <form
           class="bg-white flex flex-col items-center justify-center h-full px-12 text-center"
-          @submit.prevent
+          @submit.prevent="handleLogin"
         >
           <h1 class="font-bold text-3xl mb-4 text-gray-800">Welcome back</h1>
           <div class="social-container mb-4 text-gray-400 text-sm">
@@ -17,12 +17,14 @@
           <BaseInput
             type="email"
             placeholder="Email"
-            class="bg-gray-100 border-none w-full py-3 px-4 rounded-full mb-3 outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+            class="w-full"
+            v-model="loginForm.email"
           />
           <BaseInput
             type="password"
             placeholder="Password"
-            class="bg-gray-100 border-none w-full py-3 px-4 rounded-full mb-2 outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+            class="w-full"
+            v-model="loginForm.password"
           />
 
           <a
@@ -35,6 +37,7 @@
             variant="primary"
             size="md"
             class="mt-2 font-semibold tracking-wider uppercase"
+            :disabled="isAuthenticating"
           >
             Log in
           </BaseButton>
@@ -42,29 +45,32 @@
       </div>
 
       <div
-        class="absolute top-0 left-0 h-full w-1/2 transition-all duration-700 ease-in-out opacity-0 z-1"
-        :class="{ 'translate-x-full opacity-100 z-3': isSignUp }"
+        class="absolute top-0 left-0 h-full w-1/2 transition-all duration-700 ease-in-out"
+        :class="isSignUp ? 'translate-x-full opacity-100 z-3' : 'z-1 opacity-0'"
       >
         <form
           class="bg-white flex flex-col items-center justify-center h-full px-12 text-center"
-          @submit.prevent
+          @submit.prevent="handleRegister"
         >
           <h1 class="font-bold text-3xl mb-4 text-gray-800">Create a account</h1>
 
           <BaseInput
             type="text"
             placeholder="Username"
-            class="bg-gray-100 border-none w-full py-3 px-4 rounded-full mb-3 outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+            class="w-full"
+            v-model="signUpForm.name"
           />
           <BaseInput
             type="email"
             placeholder="Email"
-            class="bg-gray-100 border-none w-full py-3 px-4 rounded-full mb-3 outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+            class="w-full"
+            v-model="signUpForm.email"
           />
           <BaseInput
             type="password"
             placeholder="Password"
-            class="bg-gray-100 border-none w-full py-3 px-4 rounded-full mb-6 outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+            class="w-full"
+            v-model="signUpForm.password"
           />
 
           <BaseButton
@@ -87,7 +93,6 @@
         >
           <div
             class="flex flex-col items-center justify-center text-center w-1/2 h-full px-10 transition-transform duration-700 ease-in-out transform translate-x-0"
-            :class="{ 'translate-x-0': isSignUp }"
           >
             <h1 class="font-bold text-4xl mb-4">Already have a account?</h1>
             <BaseButton
@@ -95,6 +100,7 @@
               size="md"
               class="border-white text-white hover:bg-white hover:text-light-text font-semibold tracking-wider uppercase"
               @click="toggleMode"
+              :disabled="isAuthenticating"
             >
               Go to Log in
             </BaseButton>
@@ -102,7 +108,6 @@
 
           <div
             class="flex flex-col items-center justify-center text-center w-1/2 h-full px-10 transition-transform duration-700 ease-in-out transform translate-x-0"
-            :class="{ 'translate-x-0': isSignUp }"
           >
             <h1 class="font-bold text-4xl mb-4">Not have a account yet?</h1>
             <BaseButton
@@ -121,11 +126,53 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseInput from '@/components/BaseInput.vue'
+import type { LoginRequest, RegisterRequest } from '@/types/user'
+import { useUserStore } from '@/stores'
+import { useRouter } from 'vue-router'
+import { useToast } from '@/composables/useToast'
 
 const isSignUp = ref(false)
+const isAuthenticating = ref(false)
+const router = useRouter()
 
 const toggleMode = () => { isSignUp.value = !isSignUp.value }
+
+const userStore = useUserStore()
+const toast = useToast()
+
+const loginForm = reactive<LoginRequest>({
+  email: "",
+  password: "",
+})
+
+const signUpForm = reactive<RegisterRequest>({
+  name: "",
+  email: "",
+  password: "",
+})
+
+const handleLogin = async () => {
+  isAuthenticating.value = true
+  try {
+    await userStore.login(loginForm)
+    toast.success("Login successful")
+    router.push('/chat')
+  } finally {
+    isAuthenticating.value = false
+  }
+}
+
+const handleRegister = async () => {
+  isAuthenticating.value = true
+  try {
+    await userStore.register(signUpForm)
+    toast.success("Register successful")
+    router.push('/chat')
+  } finally {
+    isAuthenticating.value = false
+  }
+}
 </script>

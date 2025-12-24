@@ -1,68 +1,128 @@
 import { defineStore } from "pinia"
 import { ref, watch } from "vue"
-import type { UserProvider } from "@/types/provider"
-import { getUserProvidersApi, updateUserProviderApi, createUserProviderApi } from "@/api/provider"
+import type { UserProvider, CreateProviderRequest } from "@/types/provider"
+import { getUserProvidersApi, updateUserProviderApi, createUserProviderApi, checkUserProviderApi } from "@/api/provider"
 
 export const useProviderStore = defineStore("provider", () => {
     const providers = ref<UserProvider[]>([])
     const selectedProviderId = ref<string | null>(null)
     const selectedProvider = ref<UserProvider | null>(null)
-    const isDirty = ref(false)
-    let originalState: string = ''
+    const isAdding = ref(false)
+    const draftProvider = ref<CreateProviderRequest>({
+        name: '',
+        provider_type: 'OpenAI',
+        url: '',
+        key: ''
+    })
+    const selectedModelId = ref<string | null>(null)
+    const selectedModel = ref<string | null>(null)
+
 
     const fetchProviders = async () => {
         const data = await getUserProvidersApi()
         providers.value = data
-        originalState = JSON.stringify(providers.value)
-        if (providers.value.length > 0) {
-            selectedProviderId.value = providers.value[0].id
+        // For type checking
+        const firstProvider = providers.value[0]
+        if (firstProvider) {
+            selectedProviderId.value = firstProvider.id
+            selectedProvider.value = firstProvider
+            const models = firstProvider.models
+            if (models && models.length > 0) {
+                const firstModel = models[0]
+                if (firstModel) {
+                    selectedModelId.value = firstModel.id
+                    selectedModel.value = firstModel.model_id
+                }
+            }
         }
     }
 
     const selectProvider = (id: string) => {
+        isAdding.value = false
         selectedProviderId.value = id
         selectedProvider.value = providers.value.find(p => p.id === id) || null
-    }
-
-    const newProvider = async () => {
-        const newProviderData = await createUserProviderApi()
-        providers.value.unshift(newProviderData)
-        selectProvider(newProviderData.id)
-    }
-
-    const saveProviders = async () => {
-        for (const provider of providers.value) {
-            const originalProvider = JSON.parse(originalState).find((p: UserProvider) => p.id === provider.id)
-            if (!originalProvider) {
-                return
-            } else if (JSON.stringify(provider) !== JSON.stringify(originalProvider)) {
-                await updateUserProviderApi(provider.id, provider);
+        // Reset model when provider changes to the first available model
+        const models = selectedProvider.value?.models
+        if (models && models.length > 0) {
+            const firstModel = models[0]
+            if (firstModel) {
+                selectedModelId.value = firstModel.id
+                selectedModel.value = firstModel.model_id
             }
-        }
-        await fetchProviders()
-        isDirty.value = false
-    }
-    
-    watch(providers, (newValue) => {
-        if (JSON.stringify(newValue) !== originalState) {
-            isDirty.value = true;
         } else {
-            isDirty.value = false;
+            selectedModelId.value = null
+            selectedModel.value = null
         }
-        // update selected provider
-        if(selectedProviderId.value) {
-            selectProvider(selectedProviderId.value)
-        }
-    }, { deep: true })
+    }
 
-    return { 
-        providers, 
-        selectedProviderId, 
+    const selectModel = (id: string) => {
+        selectedModelId.value = id
+        const models = selectedProvider.value?.models
+        if (models) {
+            const model = models.find(m => m.id === id)
+            selectedModel.value = model ? model.model_id : null
+        }
+    }
+
+    const newProvider = () => {
+        isAdding.value = true
+        selectedProviderId.value = null
+        selectedProvider.value = null
+        selectedModelId.value = null
+        selectedModel.value = null
+        draftProvider.value = {
+            name: 'New Provider',
+            provider_type: 'OpenAI',
+            url: 'https://api.openai.com/v1',
+            key: ''
+        }
+    }
+
+    const cancelAdding = () => {
+        isAdding.value = false
+        const firstProvider = providers.value[0]
+        if (firstProvider) {
+            selectProvider(firstProvider.id)
+        }
+    }
+
+    const saveNewProvider = async () => {
+        const payload = { ...draftProvider.value }
+        const newProviderData = await createUserProviderApi(payload)
+        await fetchProviders()
+        selectProvider(newProviderData.id)
+        isAdding.value = false
+    }
+
+    const saveProviders = async (provider: UserProvider) => {
+        await updateUserProviderApi(provider.id, {
+            name: provider.name,
+            provider_type: provider.provider_type,
+            url: provider.url,
+            key: provider.key,
+        })
+        await fetchProviders()
+    }
+
+    const checkProvider = async (id: string) => {
+        await checkUserProviderApi(id)
+    }
+
+    return {
+        providers,
+        selectedProviderId,
         selectedProvider,
-        isDirty, 
-        fetchProviders, 
+        selectedModelId,
+        selectedModel,
+        isAdding,
+        draftProvider,
+        fetchProviders,
         selectProvider,
+        selectModel,
         newProvider,
-        saveProviders
+        cancelAdding,
+        saveNewProvider,
+        saveProviders,
+        checkProvider
     }
 })

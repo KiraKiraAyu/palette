@@ -12,7 +12,7 @@ interface Props {
     disabled?: boolean
 }
 
-const { variant = 'primary', size = 'md', disabled = false,  } = defineProps<Props>()
+const { variant = 'primary', size = 'md', disabled = false } = defineProps<Props>()
 const classes = computed(() => {
     const variantMap: Record<typeof variant, string> = {
         primary: 'bg-light-main text-light-text focus:ring-blue-500 rounded-full border-1 border-light-border hover:bg-light-main/70 transition-colors',

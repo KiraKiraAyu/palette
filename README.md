@@ -43,7 +43,7 @@ Palette is a full-stack web application.
     The application uses RSA keys for signing JWTs. You can generate them using OpenSSL.
 
     ```bash
-    mkdir keys
+    mkdir backend/keys
     openssl genpkey -algorithm RSA -out backend/keys/private_key.pem -pkeyopt rsa_keygen_bits:2048
-    openssl rsa -pubout -in backend/keys/private_key.pem -out keys/public_key.pem
+    openssl rsa -pubout -in backend/keys/private_key.pem -out backend/keys/public_key.pem
     ```

@@ -1,27 +1,41 @@
-import type { UserProvider } from "@/types/provider";
-import request from "@/utils/request";
+import type { CreateProviderRequest, UserProvider, ProviderModel, UpdateProviderRequest } from "@/types/provider"
+import request from "@/utils/request"
 
 enum Api {
-    UserProviders = "/api/user_providers",
-    Check = "/api/user_providers/check"
+    UserProviders = "/api/providers",
+    UserProvider = "/api/providers/{id}",
+    Check = "/api/providers/check/{id}"
 }
 
-export function getUserProvidersApi() {
-    return request.get<UserProvider[]>(Api.UserProviders)
+interface ProviderWithModels {
+    provider: UserProvider
+    models: ProviderModel[]
 }
 
-export function createUserProviderApi() {
-    return request.post<UserProvider>(Api.UserProviders)
+interface ProviderListResponse {
+    items: ProviderWithModels[]
 }
 
-export function updateUserProviderApi(id: string, data: Partial<UserProvider>) {
-    return request.put<UserProvider>(`${Api.UserProviders}/${id}`, data)
+export async function getUserProvidersApi() {
+    const data = await request.get<ProviderListResponse>(Api.UserProviders)
+    return data.items.map(item => ({
+        ...item.provider,
+        models: item.models
+    }))
+}
+
+export function createUserProviderApi(data: CreateProviderRequest) {
+    return request.post<UserProvider>(Api.UserProviders, data)
+}
+
+export function updateUserProviderApi(id: string, data: UpdateProviderRequest) {
+    return request.put<UserProvider>(Api.UserProvider.replace("{id}", id), data)
 }
 
 export function deleteUserProviderApi(id: string) {
-    return request.delete<never>(`${Api.UserProviders}/${id}`)
+    return request.delete<never>(Api.UserProvider.replace("{id}", id))
 }
 
 export function checkUserProviderApi(id: string) {
-    return request.post<never>(`${Api.Check}/${id}`)
+    return request.post<never>(Api.Check.replace("{id}", id))
 }
