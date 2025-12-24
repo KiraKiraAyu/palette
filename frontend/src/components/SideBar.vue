@@ -14,6 +14,7 @@
             >
                 <FoldButton
                     @click="selectChat(chat.id)"
+                    :class="{ 'bg-light-blue!': chat.id === conversationStore.currentConversationId }"
                     :folded="folded"
                     :label="chat.title || 'No title'"
                 ></FoldButton>
