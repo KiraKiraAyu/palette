@@ -55,11 +55,12 @@ pub async fn create_state(config: &Config) -> Result<AppState, Box<dyn std::erro
     let user_repo = Arc::new(UserRepo::new(database.clone()));
     let auth_service = Arc::new(AuthService::new(user_repo, config.jwt.clone()));
 
-    let provider_repo = Arc::new(ProviderRepo::new(database.clone()));
-    let user_provider_service = Arc::new(UserProviderService::new(provider_repo.clone()));
-
     let provider_model_repo = Arc::new(ProviderModelRepo::new(database.clone()));
     let model_info_client: Arc<dyn ModelInfoClient> = Arc::new(DefaultModelInfoClient::default());
+    
+    let provider_repo = Arc::new(ProviderRepo::new(database.clone()));
+    let user_provider_service = Arc::new(UserProviderService::new(provider_repo.clone(), model_info_client.clone()));
+
     let provider_model_service = Arc::new(ProviderModelService::new(provider_model_repo.clone(), provider_repo.clone(), model_info_client));
 
     let session_repo = Arc::new(ConversationSessionRepo::new(database.clone()));

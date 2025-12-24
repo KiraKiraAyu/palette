@@ -69,5 +69,17 @@ pub async fn delete_provider(
     Path(id): Path<Uuid>,
 ) -> Result<Json<ApiResponse<ProviderIdResponse>>> {
     state.delete(claims.sub, id).await?;
-    Ok(Json(ApiResponse::success(Some(ProviderIdResponse { id }), Some("Provider deleted"))))
+    Ok(Json(ApiResponse::success(
+        Some(ProviderIdResponse { id }),
+        Some("Provider deleted"),
+    )))
+}
+
+pub async fn check_provider(
+    AuthUser(claims): AuthUser,
+    State(state): State<Arc<UserProviderService>>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<ApiResponse<()>>> {
+    state.check(claims.sub, id).await?;
+    Ok(Json(ApiResponse::success(None, Some("Provider verified"))))
 }

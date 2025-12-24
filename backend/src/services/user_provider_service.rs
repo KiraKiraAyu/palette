@@ -5,15 +5,19 @@ use crate::{
     error::{AppError, Result},
     models::{user_provider::{self, ProviderType}, provider_model},
     repositories::provider_repo::ProviderRepo,
+    clients::model_info_client::ModelInfoClient,
 };
 
 #[derive(Clone)]
 pub struct UserProviderService {
     pub repo: Arc<ProviderRepo>,
+    pub model_info_client: Arc<dyn ModelInfoClient>,
 }
 
 impl UserProviderService {
-    pub fn new(repo: Arc<ProviderRepo>) -> Self { Self { repo } }
+    pub fn new(repo: Arc<ProviderRepo>, model_info_client: Arc<dyn ModelInfoClient>) -> Self {
+        Self { repo, model_info_client }
+    }
 
     pub async fn list(&self, user_id: Uuid) -> Result<Vec<user_provider::Model>> {
         self.repo.list_by_user_id(user_id).await
@@ -82,5 +86,9 @@ impl UserProviderService {
             Some(pair) => Ok(pair),
             None => Err(AppError::NotFound("Provider not found".to_string())),
         }
+    }
+    pub async fn check(&self, user_id: Uuid, id: Uuid) -> Result<()> {
+        let provider = self.get(user_id, id).await?;
+        self.model_info_client.check_connectivity(&provider).await
     }
 }

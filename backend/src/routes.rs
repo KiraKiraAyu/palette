@@ -20,6 +20,7 @@ pub fn create_routes() -> Router<AppState> {
         .route("/api/providers/{id}", get(user_provider_handler::get_provider))
         .route("/api/providers/{id}", put(user_provider_handler::update_provider))
         .route("/api/providers/{id}", delete(user_provider_handler::delete_provider))
+        .route("/api/providers/check/{id}", post(user_provider_handler::check_provider),)
 
         // Provider Models
         .route("/api/providers/{provider_id}/models", post(provider_model_handler::create_model))

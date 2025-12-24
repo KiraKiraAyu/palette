@@ -72,12 +72,12 @@ impl LlmClient for DefaultLlmClient {
         messages: Vec<ChatMessagePayload>,
     ) -> Result<BoxStream<'static, Result<String>>> {
         let base = provider.url.trim_end_matches('/');
-        if !base.starts_with("https://") {
-            return Err(AppError::BadRequest(
-                "Provider URL must be https".to_string(),
-            ));
-        }
-        let url = format!("{}/v1/chat/completions", base);
+        
+        let url = if base.ends_with("/v1") {
+            format!("{}/chat/completions", base)
+        } else {
+            format!("{}/v1/chat/completions", base)
+        };
 
         let payload = ChatRequestPayload {
             model: model_id.to_string(),
