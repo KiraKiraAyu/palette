@@ -1,35 +1,66 @@
-@import './base.css';
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+@theme {
+  --color-brand-50:  #fff2f9;
+  --color-brand-100: #ffe6f5;
+  --color-brand-200: #ffcceb;
+  --color-brand-300: #ffa3d7;
+  --color-brand-400: #ff70bb;
+  --color-brand-500: #f03e92;
+  --color-brand-600: #d11f6d;
+  --color-brand-700: #ad1353;
+  --color-brand-800: #8f1245;
+  --color-brand-900: #78123e;
+  --color-brand-950: #450520;
+
+  --color-accent-50:  #f2f2ff;
+  --color-accent-100: #e5e5ff;
+  --color-accent-200: #d1d1ff;
+  --color-accent-300: #b3b3ff;
+  --color-accent-400: #9191ff;
+  --color-accent-500: #6b6bfa;
+  --color-accent-600: #5252e0;
+  --color-accent-700: #4343bf;
+  --color-accent-800: #38389c;
+  --color-accent-900: #31317d;
+  --color-accent-950: #1e1e4a;
+
+  --color-neutral-50:  #f7f8fd;
+  --color-neutral-100: #edecf5;
+  --color-neutral-200: #dcdbe8;
+  --color-neutral-300: #c4c2d6;
+  --color-neutral-400: #a8a6c2;
+  --color-neutral-500: #8e8ba7;
+  --color-neutral-600: #6f6c8a;
+  --color-neutral-700: #595670;
+  --color-neutral-800: #433e5e;
+  --color-neutral-900: #37334d;
+  --color-neutral-950: #232130;
+
+  /* Main */
+  --color-light-main: var(--color-brand-50);
+  --color-light-blue: var(--color-accent-200);
+
+  /* Background */
+  --color-light-bg: var(--color-neutral-50);
+  --color-light-card: #ffffff; 
+
+  /* Text */
+  --color-light-text: var(--color-neutral-600);
+  --color-light-muted: var(--color-neutral-500);
+
+  /* Border */
+  --color-light-border: var(--color-brand-100);
+
+  /* Shadow */
+  --shadow-light-glow: 0 8px 24px -4px rgba(165, 164, 245, 0.15);
+  --shadow-light-card: 0 4px 6px -1px rgba(67, 62, 94, 0.05);
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
-}
-
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
-}
-
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+body {
+  background-color: var(--color-light-bg);
+  color: var(--color-light-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

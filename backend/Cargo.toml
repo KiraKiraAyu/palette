@@ -9,15 +9,15 @@ members = [".", "migration"]
 
 [dependencies]
 # Web framework
-axum = { version = "0.8.4", features = ["macros", "ws", "multipart"] }
-axum-extra = { version = "0.12.1", features = ["cookie", "typed-header"] }
+axum = { version = "0.8.7", features = ["macros", "ws", "multipart"] }
+axum-extra = { version = "0.12.2", features = ["cookie", "typed-header"] }
 async-trait = "0.1.88"
 tokio = { version = "1.47.0", features = ["full"] }
 tower = "0.5.2"
 tower-http = { version = "0.6.6", features = ["cors", "fs", "trace"] }
 
 # Database
-sea-orm = { version = "1.1.19", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros", "with-chrono", "with-uuid"] }
+sea-orm = { version = "1.1.19", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros", "with-chrono", "with-uuid", "with-rust_decimal"] }
 sea-orm-migration = "1.1.19"
 migration = { path = "migration" }
 redis = { version = "0.32.7", features = ["tokio-comp"] }
@@ -25,9 +25,9 @@ redis = { version = "0.32.7", features = ["tokio-comp"] }
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.141"
+rust_decimal = { version = "1.36.0", features = ["serde"] }
 
 # Authentication & Security
-axum-jwt-auth = "0.5.1"
 jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"]}
 bcrypt = "0.17.0"
 uuid = { version = "1.17.0", features = ["v7", "serde"] }
@@ -53,3 +53,9 @@ validator = { version = "0.20.0", features = ["derive"] }
 
 # Random
 rand = "0.9.2"
+
+# Outgoing HTTP (pricing fetch)
+reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"] }
+eventsource-stream = "0.2.3"
+futures = "0.3.31"
+tokio-stream = "0.1.17"
