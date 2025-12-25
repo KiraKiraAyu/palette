@@ -28,7 +28,7 @@
                 </div>
 
                 <div v-else class="flex flex-col gap-6">
-                    <div v-for="msg in messages" :key="msg.id" class="flex flex-col gap-2" :class="{ 'items-end': msg.role === ChatRole.User }">
+                    <div v-for="(msg, index) in messages" :key="msg.id" class="flex flex-col gap-2" :class="{ 'items-end': msg.role === ChatRole.User }">
                         <div
                             class="font-bold text-sm text-gray-600 uppercase"
                             :class="{ 'text-right': msg.role === ChatRole.User }"
@@ -40,7 +40,11 @@
                             :class="msg.role === ChatRole.User ? 'bg-blue-50 rounded-full max-w-[50%]': 'max-w-none'"
                         >
                             <div v-if="msg.role === ChatRole.Assistant">
-                                <div v-if="msg.content" v-html="renderMarkdown(msg.content)"></div>
+                                <StreamMarkdown 
+                                    v-if="msg.content" 
+                                    :content="msg.content" 
+                                    :animate="conversationStore.streaming && index === messages.length - 1"
+                                />
                                 <BaseLoading v-else-if="conversationStore.streaming" class="w-4 h-4" />
                             </div>
                             <div v-else>{{ msg.content }}</div>
@@ -88,43 +92,16 @@ import { computed, ref, nextTick, watch } from 'vue'
 import ChatInput from './ChatInput.vue'
 import BaseSelect from './BaseSelect.vue'
 import BaseLoading from './BaseLoading.vue'
+import StreamMarkdown from './StreamMarkdown.vue'
 import { useProviderStore } from '@/stores/provider'
 import { useConversationStore } from '@/stores/conversation'
 import { storeToRefs } from 'pinia'
-import MarkdownIt from 'markdown-it'
-import hljs from 'highlight.js'
-import 'highlight.js/styles/github.css'
 import { ChatRole } from '@/types/conversation'
 
 const providerStore = useProviderStore()
 const conversationStore = useConversationStore()
 const { messages } = storeToRefs(conversationStore)
 const messagesContainer = ref<HTMLElement | null>(null)
-
-const md = new MarkdownIt({
-    html: false,
-    linkify: true,
-    typographer: true,
-    breaks: true
-})
-
-md.set({
-    highlight: function (str, lang) {
-        if (lang && hljs.getLanguage(lang)) {
-            try {
-                return '<pre class="hljs"><code>' +
-                    hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
-                    '</code></pre>';
-            } catch (_) {}
-        }
-
-        return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
-    }
-})
-
-const renderMarkdown = (content: string) => {
-    return md.render(content)
-}
 
 const providerOptions = computed(() => {
     return providerStore.providers.map(p => ({
