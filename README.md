@@ -8,6 +8,25 @@ Palette is a modern, full-stack web application example designed for seamless LL
 
 - [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
 
+### Setup
+
+1.  **Clone the repository:**
+
+    ```bash
+    git clone https://github.com/KiraKiraAyu/palette
+    cd palette
+    ```
+
+2.  **Generate JWT keys:**
+
+    The application uses RSA keys for signing JWTs. You can generate them using OpenSSL.
+
+    ```bash
+    mkdir backend/keys
+    openssl genpkey -algorithm RSA -out backend/keys/private_key.pem -pkeyopt rsa_keygen_bits:2048
+    openssl rsa -pubout -in backend/keys/private_key.pem -out backend/keys/public_key.pem
+    ```
+
 ### Running the App
 
 The easiest way to run Palette is using Docker Compose:
