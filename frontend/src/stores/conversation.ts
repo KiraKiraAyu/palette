@@ -15,6 +15,7 @@ export const useConversationStore = defineStore("conversation", () => {
     const messages = ref<ConversationMessage[]>([])
     const isLoading = ref(false)
     const isStreaming = ref(false)
+    const abortStream = ref<(() => void) | null>(null)
 
     const fetchConversations = async () => {
         isLoading.value = true
@@ -85,7 +86,7 @@ export const useConversationStore = defineStore("conversation", () => {
             return
         }
 
-        sendMessageApi(
+        abortStream.value = sendMessageApi(
             conversationId,
             { content, provider_model_id: modelId },
             (chunk) => {
@@ -107,13 +108,23 @@ export const useConversationStore = defineStore("conversation", () => {
             (error) => {
                 console.error("Stream error", error)
                 isStreaming.value = false
+                abortStream.value = null
                 assistantMsgReactive.content += "\n[Error generating response]"
             },
             () => {
                 isStreaming.value = false
+                abortStream.value = null
                 fetchConversations()
             }
         )
+    }
+
+    const stopStreaming = () => {
+        if (abortStream.value) {
+            abortStream.value()
+            abortStream.value = null
+            isStreaming.value = false
+        }
     }
 
     return {
@@ -126,6 +137,7 @@ export const useConversationStore = defineStore("conversation", () => {
         createConversation,
         deleteConversation,
         selectConversation,
-        sendMessage
+        sendMessage,
+        stopStreaming
     }
 })

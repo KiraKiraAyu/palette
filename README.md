@@ -1,49 +1,46 @@
 # Palette
 
-Palette is a full-stack web application.
-
-## Project Structure
-
-- `backend`: The Rust backend server.
-- `frontend`: The Vue.js frontend application.
-- `database`: Docker configuration for the database.
-- `proxy`: Proxy configuration.
+Palette is a modern, full-stack web application example designed for seamless LLM interactions.
 
 ## Getting Started
 
-### Setup
+### Prerequisites
 
-1.  **Clone the repository:**
+- [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
 
-    ```bash
-    git clone https://github.com/KiraKiraAyu/palette
-    cd palette
-    ```
+### Running the App
 
-2.  **Set up environment variables:**
+The easiest way to run Palette is using Docker Compose:
 
-    Copy `.env.example` file to `.env` in the root of the project and add the environment variables.
+```bash
+docker compose up -d
+```
 
-    ```env
-    # Server Configuration
-    HOST=127.0.0.1
-    PORT=3000
+This will start: `http://localhost:80`
 
-    # Database URL (adjust with your database credentials)
-    DATABASE_URL=postgres://user:password@localhost:5432/database_name
+## Local Development
 
-    # JWT Settings
-    JWT_PRIVATE_KEY_PATH=backend/keys/private_key.pem
-    JWT_PUBLIC_KEY_PATH=backend/keys/public_key.pem
-    JWT_EXPIRES_IN=86400
-    ```
+### Configuration
 
-3.  **Generate JWT keys:**
+```bash
+cp .env.example .env
+```
 
-    The application uses RSA keys for signing JWTs. You can generate them using OpenSSL.
+### Backend
 
-    ```bash
-    mkdir backend/keys
-    openssl genpkey -algorithm RSA -out backend/keys/private_key.pem -pkeyopt rsa_keygen_bits:2048
-    openssl rsa -pubout -in backend/keys/private_key.pem -out backend/keys/public_key.pem
-    ```
+Navigate to the `backend` directory:
+
+```bash
+cd backend
+cargo run
+```
+
+### Frontend
+
+Navigate to the `frontend` directory:
+
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```

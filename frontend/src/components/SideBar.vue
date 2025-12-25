@@ -6,25 +6,27 @@
         <FoldButton class="mt-16" @click="newChat" :folded="folded" label="New Chat">
             <i-lucide-edit />
         </FoldButton>
-        <div class="flex flex-col flex-1 min-h-0 overflow-y-auto w-full" v-show="!folded && conversations">
-            <div
-                v-for="chat in conversations"
-                :key="chat.id"
-                class="group relative w-full"
-            >
-                <FoldButton
-                    @click="selectChat(chat.id)"
-                    :class="{ 'bg-light-blue!': chat.id === conversationStore.currentConversationId }"
-                    :folded="folded"
-                    :label="chat.title || 'No title'"
-                ></FoldButton>
-                <button
-                    class="absolute right-2 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center justify-center p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer z-10 bg-transparent border-none"
-                    @click.stop="deleteChat(chat.id)"
-                    title="Delete conversation"
+        <div class="flex flex-col flex-1 min-h-0 overflow-y-auto w-full">
+            <div v-show="!folded && conversations" class="w-full">
+                <div
+                    v-for="chat in conversations"
+                    :key="chat.id"
+                    class="group relative w-full"
                 >
-                    <i-lucide-trash-2 />
-                </button>
+                    <FoldButton
+                        @click="selectChat(chat.id)"
+                        :class="{ 'bg-light-blue!': chat.id === conversationStore.currentConversationId }"
+                        :folded="folded"
+                        :label="chat.title || 'No title'"
+                    ></FoldButton>
+                    <button
+                        class="absolute right-2 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center justify-center p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer z-10 bg-transparent border-none"
+                        @click.stop="deleteChat(chat.id)"
+                        title="Delete conversation"
+                    >
+                        <i-lucide-trash-2 />
+                    </button>
+                </div>
             </div>
         </div>
         <FoldButton class="" @click="goToSettings" :folded="folded" label="Settings">

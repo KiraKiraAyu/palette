@@ -63,7 +63,9 @@
             <ChatInput 
                 class="w-5xl border border-light-blue rounded-2xl shadow-lg bg-white" 
                 @send="handleSend"
+                @stop="handleStop"
                 :disabled="conversationStore.streaming || !providerStore.selectedModelId"
+                :streaming="conversationStore.streaming"
             ></ChatInput>
         </div>
     </div>
@@ -113,7 +115,7 @@ md.set({
                 return '<pre class="hljs"><code>' +
                     hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
                     '</code></pre>';
-            } catch (__) {}
+            } catch (_) {}
         }
 
         return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
@@ -167,5 +169,9 @@ const handleSend = async (text: string) => {
     if (!providerStore.selectedModelId) return
     
     await conversationStore.sendMessage(text, providerStore.selectedModelId)
+}
+
+const handleStop = () => {
+    conversationStore.stopStreaming()
 }
 </script>

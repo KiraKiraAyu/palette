@@ -24,21 +24,24 @@ pub struct JwtConfig {
 
 impl Config {
     pub fn from_env() -> Result<Self, Box<dyn std::error::Error>> {
-        dotenvy::from_path("../.env")?;
+        match dotenvy::from_path("../.env") {
+            Ok(_) => {},
+            Err(_) => { dotenvy::dotenv().ok(); },
+        }
 
         let private_key_path = env::var("JWT_PRIVATE_KEY_PATH")
-            .map_err(|_| io::Error::new(io::ErrorKind::NotFound, "环境变量 JWT_PRIVATE_KEY_PATH 未设置"))?;
+            .map_err(|_| io::Error::new(io::ErrorKind::NotFound, "Environment variable JWT_PRIVATE_KEY_PATH not set"))?;
         let private_key = fs::read(&private_key_path)
-            .map_err(|e| io::Error::new(io::ErrorKind::NotFound, format!("读取私钥文件失败: {}, 路径: {}", e, private_key_path)))?;
+            .map_err(|e| io::Error::new(io::ErrorKind::NotFound, format!("Failed to read private key file: {}, path: {}", e, private_key_path)))?;
         let jwt_private_key = EncodingKey::from_rsa_pem(&private_key)
-            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("解析 JWT 私钥失败: {}", e)))?;
+            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("Failed to parse JWT private key: {}", e)))?;
 
         let public_key_path = env::var("JWT_PUBLIC_KEY_PATH")
-            .map_err(|_| io::Error::new(io::ErrorKind::NotFound, "环境变量 JWT_PUBLIC_KEY_PATH 未设置"))?;
+            .map_err(|_| io::Error::new(io::ErrorKind::NotFound, "Environment variable JWT_PUBLIC_KEY_PATH not set"))?;
         let public_key = fs::read(&public_key_path)
-            .map_err(|e| io::Error::new(io::ErrorKind::NotFound, format!("读取公钥文件失败: {}, 路径: {}", e, public_key_path)))?;
+            .map_err(|e| io::Error::new(io::ErrorKind::NotFound, format!("Failed to read public key file: {}, path: {}", e, public_key_path)))?;
         let jwt_public_key = DecodingKey::from_rsa_pem(&public_key)
-            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("解析 JWT 公钥失败: {}", e)))?;
+            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("Failed to parse JWT public key: {}", e)))?;
 
 
         let config = Config {
@@ -50,7 +53,7 @@ impl Config {
                     .unwrap_or(3000),
             },
             database_url: env::var("DATABASE_URL")
-                .map_err(|_| io::Error::new(io::ErrorKind::NotFound, "环境变量 DATABASE_URL 未设置"))?,
+                .map_err(|_| io::Error::new(io::ErrorKind::NotFound, "Environment variable DATABASE_URL not set"))?,
             jwt: JwtConfig {
                 encoding_key: jwt_private_key,
                 decoding_key: jwt_public_key,

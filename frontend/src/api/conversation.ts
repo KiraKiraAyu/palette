@@ -45,7 +45,7 @@ export function sendMessageApi(
     onComplete?: () => void
 ): () => void {
     const userStore = useUserStore()
-    const url = `${import.meta.env.VITE_API_URL}${Api.ConversationMessages.replace("{id}", conversationId)}`
+    const url = Api.ConversationMessages.replace("{id}", conversationId)
 
     const controller = new AbortController()
 

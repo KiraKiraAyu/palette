@@ -10,7 +10,7 @@
             v-if="$slots.default">
             <slot></slot>
         </div>
-        <span class="transition-opacity whitespace-nowrap" :class="{ 'opacity-0': folded, 'p-6': !$slots.default}">{{ label }}</span>
+        <span class="transition-opacity whitespace-nowrap" :class="{ 'opacity-0': folded, 'pl-6': !$slots.default}">{{ label }}</span>
     </BaseButton>
 </template>
 

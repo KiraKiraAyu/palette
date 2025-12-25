@@ -14,17 +14,19 @@
     ></textarea>
 
     <BaseButton
-      @click="handleSend"
-      :disabled="disabled || !content.trim()"
+      @click="streaming ? handleStop() : handleSend()"
+      :disabled="!streaming && (disabled || !content.trim())"
       class="w-10 h-10 relative flex items-center justify-center rounded-full transition-all duration-200 shrink-0 mb-0.5 p-0!"
       :class="
-        !disabled && content.trim()
+        streaming
+          ? 'bg-light-blue text-white'
+          : !disabled && content.trim()
           ? 'bg-blue-600 text-white hover:bg-blue-700'
           : 'bg-gray-100 text-gray-400 cursor-not-allowed'
       "
     >
-      <i-lucide-send-horizontal class="absolute transition-opacity" :class="content ? '' : 'opacity-0'"></i-lucide-send-horizontal>
-      <i-lucide-square class="absolute transition-opacity"></i-lucide-square>
+      <i-lucide-square v-if="streaming" class="absolute"></i-lucide-square>
+      <i-lucide-send-horizontal v-else class="absolute"></i-lucide-send-horizontal>
     </BaseButton>
   </div>
 </template>
@@ -35,10 +37,12 @@ import BaseButton from './BaseButton.vue'
 
 const props = defineProps<{
   disabled?: boolean
+  streaming?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'send', text: string): void
+  (e: 'stop'): void
 }>()
 
 const content = ref('')
@@ -68,6 +72,10 @@ const handleSend = async () => {
 
   await nextTick()
   autoResize()
+}
+
+const handleStop = () => {
+  emit('stop')
 }
 
 const handleKeydown = (e: KeyboardEvent) => {
